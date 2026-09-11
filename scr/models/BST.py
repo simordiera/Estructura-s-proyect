@@ -1,30 +1,30 @@
 from collections import deque
 from typing import Optional
 
-from Nodo import Nodo
+from scr.models.Nodo import Nodo
 
 
 class BST:
     def __init__(self):
         self.raiz = None
 
-    def insertar(self,valor:int):
+    def insertar(self,valor:tuple):
         if self.raiz is None:
             self.raiz=Nodo(valor)
         else:
             self._insertar(self.raiz,valor)
 
-    def _insertar(self, nodo:Nodo, valor:int):
-        if valor < nodo.valor:
+    def _insertar(self, nodo:Nodo, valor:tuple, i:int):
+        if valor[i] < nodo.valor[i]:
             if nodo.izquierda is None:
                 nodo.izquierda = Nodo(valor)
             else:
                 self._insertar(nodo.izquierda,valor)
-        elif valor > nodo.valor:
+        elif valor[i] > nodo.valor[i]:
             if nodo.derecha is None:
                 nodo.derecha = Nodo(valor)
             else:
-                self._insertar(nodo.derecha,valor)
+                self._insertar(nodo.derecha,valor, i+1)
 
     def pre_order(self) -> None:
         if self.raiz is None:

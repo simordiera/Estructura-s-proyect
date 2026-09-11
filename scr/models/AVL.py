@@ -1,7 +1,7 @@
 from collections import deque
 from typing import Optional
 
-from Nodo import Nodo
+from scr.models.Nodo import Nodo
 
 
 class AVL:
