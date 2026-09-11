@@ -1,0 +1,16 @@
+enableStaticServing=true
+
+[[theme.fontFaces]]
+font-family = "Pacifico"
+url = "https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet"
+weight = 400
+style = "normal"
+
+[theme]
+base="light"
+primaryColor="#031926"
+backgroundColor="#9DBEBB"
+secondaryBackgroundColor="#031926"
+textColor="#000000"
+linkColor="#468189"
+linkUnderline=false
