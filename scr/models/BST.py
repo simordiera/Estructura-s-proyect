@@ -1,7 +1,6 @@
 from collections import deque
 from typing import Optional
-
-from scr.models.Nodo import Nodo
+from Nodo import Nodo
 
 
 class BST:
@@ -14,100 +13,171 @@ class BST:
         else:
             self._insertar(self.raiz,valor)
 
-    def _insertar(self, nodo:Nodo, valor:tuple, i:int):
-        if valor[i] < nodo.valor[i]:
-            if nodo.izquierda is None:
-                nodo.izquierda = Nodo(valor)
-            else:
-                self._insertar(nodo.izquierda,valor)
-        elif valor[i] > nodo.valor[i]:
-            if nodo.derecha is None:
-                nodo.derecha = Nodo(valor)
-            else:
-                self._insertar(nodo.derecha,valor, i+1)
+    def _insertar(self, nodo:Nodo, valor:tuple):
+        if valor[0]!=nodo.valor[0]:
+            if valor[0] < nodo.valor[0]:
+                if nodo.izquierda is None:
+                    nodo.izquierda = Nodo(valor)
+                else:
+                    self._insertar(nodo.izquierda,valor)
+            elif valor[0] > nodo.valor[0]:
+                if nodo.derecha is None:
+                    nodo.derecha = Nodo(valor)
+                else:
+                    self._insertar(nodo.derecha,valor)
+        elif valor[1]!=nodo.valor[1]:
+            if valor[1] < nodo.valor[1]:
+                if nodo.izquierda is None:
+                    nodo.izquierda = Nodo(valor)
+                else:
+                    self._insertar(nodo.izquierda,valor)
+            elif valor[1] > nodo.valor[1]:
+                if nodo.derecha is None:
+                    nodo.derecha = Nodo(valor)
+                else:
+                    self._insertar(nodo.derecha,valor)
+        else:
+            if valor[2] < nodo.valor[2]:
+                if nodo.izquierda is None:
+                    nodo.izquierda = Nodo(valor)
+                else:
+                    self._insertar(nodo.izquierda,valor)
+            elif valor[2] > nodo.valor[2]:
+                if nodo.derecha is None:
+                    nodo.derecha = Nodo(valor)
+                else:
+                    self._insertar(nodo.derecha,valor)
+
+            
 
     def pre_order(self) -> None:
         if self.raiz is None:
-            print("",end="")
-        else:
-            self._pre_order(self.raiz)
-
-    def _pre_order(self,raiz:Nodo)->None:
-        if raiz is None:
             return
-        print(raiz.valor,end=" ")
-        self._pre_order(raiz.izquierda)
-        self._pre_order(raiz.derecha)
+        lista = []
+        lista = self._pre_order(self.raiz, lista)
+        return lista
+
+    def _pre_order(self,raiz:Nodo,lista)->None:
+        if raiz is None:
+            return lista
+        lista.append(raiz.valor)
+        lista = self._pre_order(raiz.izquierda, lista)
+        lista = self._pre_order(raiz.derecha, lista)
+        return lista
 
     def in_order(self)->None:
         if self.raiz is None:
-            print("",end="")
-        else:
-            self._in_order(self.raiz)
-
-    def _in_order(self,raiz:Nodo)->None:
-        if raiz is None:
             return
-        self._in_order(raiz.izquierda)
-        print(raiz.valor,end=" ")
-        self._in_order(raiz.derecha)
+        lista = []
+        self._in_order(self.raiz, lista)
+        return lista
+
+    def _in_order(self,raiz:Nodo, lista)->None:
+        if raiz is None:
+            return lista
+        lista = self._in_order(raiz.izquierda, lista)
+        lista.append(raiz.valor)
+        lista = self._in_order(raiz.derecha, lista)
+        return lista
 
     def post_order(self)->None:
         if self.raiz is None:
-            print("",end="")
-        else:
-            self._post_order(self.raiz)
-
-    def _post_order(self,raiz:Nodo)->None:
-        if raiz is None:
             return
-        self._post_order(raiz.izquierda)
-        self._post_order(raiz.derecha)
-        print(raiz.valor,end=" ")
+        lista = []
+        self._post_order(self.raiz, lista)
+        return lista
 
+    def _post_order(self,raiz:Nodo, lista)->None:
+        if raiz is None:
+            return lista
+        lista = self._post_order(raiz.izquierda, lista)
+        lista = self._post_order(raiz.derecha, lista)
+        lista.append(raiz.valor)
+        return lista
+    
     def anchura(self)->None:
         if self.raiz is None:
-            print("",end="")
-        else:
-            self._anchura(self.raiz)
+            return
+        lista=[]
+        return self._anchura(self.raiz,lista)
 
-    def _anchura(self,raiz:Nodo)->None:
+    def _anchura(self,raiz:Nodo, lista)->None:
         cola=deque([raiz])
         while cola:
             nodo = cola.popleft()
-            print(nodo.valor,end=" ")
+            lista.append(nodo.valor)
             if nodo.izquierda is not None:
                 cola.append(nodo.izquierda)
             if nodo.derecha is not None:
                 cola.append(nodo.derecha)
+        return lista
 
     def _buscar_minimo(self,raiz:Nodo)->Nodo:
         actual = raiz
         while actual.izquierda is not None:
             actual = actual.izquierda
+        print(" ")
         return actual
 
-    def eliminar(self, valor:int)->None:
+    def eliminar(self, valor:tuple)->None:
         self.raiz  =self._eliminar(self.raiz,valor)
 
-    def _eliminar(self,raiz:Optional[Nodo],valor:int)->Optional[Nodo]:
+    def _eliminar(self,raiz:Optional[Nodo],valor:tuple)->Optional[Nodo]:
         if raiz is None:
             return None
-        if valor < raiz.valor:
-            raiz.izquierda = self._eliminar(raiz.izquierda,valor)
-        elif valor > raiz.valor:
-            raiz.derecha = self._eliminar(raiz.derecha,valor)
+        if valor[0]!=raiz.valor[0]:
+            if valor[0] < raiz.valor[0]:
+                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
+            elif valor > raiz.valor:
+                raiz.derecha = self._eliminar(raiz.derecha,valor)
+            else:
+                if raiz.es_hoja():
+                    return None
+                if raiz.izquierda is None:
+                    return raiz.derecha
+                if raiz.derecha is None:
+                    return raiz.izquierda
+                sucesor = self._buscar_minimo(raiz.derecha)
+                raiz.valor=sucesor.valor
+                raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
+            return raiz
+
+        elif valor[1]!=raiz.valor[1]:
+            if valor[1] < raiz.valor[1]:
+                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
+            elif valor > raiz.valor:
+                raiz.derecha = self._eliminar(raiz.derecha,valor)
+            else:
+                if raiz.es_hoja():
+                    return None
+                if raiz.izquierda is None:
+                    return raiz.derecha
+                if raiz.derecha is None:
+                    return raiz.izquierda
+                sucesor = self._buscar_minimo(raiz.derecha)
+                raiz.valor=sucesor.valor
+                raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
+            return raiz
+
         else:
-            if raiz.es_hoja():
-                return None
-            if raiz.izquierda is None:
-                return raiz.derecha
-            if raiz.derecha is None:
-                return raiz.izquierda
-            sucesor = self._buscar_minimo(raiz.derecha)
-            raiz.valor=sucesor.valor
-            raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
-        return raiz
+            if valor[2] < raiz.valor[2]:
+                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
+            elif valor > raiz.valor:
+                raiz.derecha = self._eliminar(raiz.derecha,valor)
+            else:
+                if raiz.es_hoja():
+                    return None
+                if raiz.izquierda is None:
+                    return raiz.derecha
+                if raiz.derecha is None:
+                    return raiz.izquierda
+                sucesor = self._buscar_minimo(raiz.derecha)
+                raiz.valor=sucesor.valor
+                raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
+            return raiz
+        
+                        
+                
 
     def altura(self) -> int:
         if self.raiz is None:
@@ -131,9 +201,7 @@ class BST:
 
     def recorrido_por_ramas(self) -> None:
         if self.raiz is None:
-            print("El árbol está vacío.")
             return
-        print("Caminos por ramas:")
         self._recorrido_por_ramas(self.raiz, [])
 
     def _recorrido_por_ramas(self, nodo: Nodo, camino: list) -> None:
@@ -175,3 +243,4 @@ class BST:
         conteo[nivel] = conteo.get(nivel, 0) + 1
         self._cantidad_de_nodos_por_nivel(nodo.izquierda, nivel + 1, conteo)
         self._cantidad_de_nodos_por_nivel(nodo.derecha, nivel + 1, conteo)
+

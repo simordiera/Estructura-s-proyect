@@ -1,7 +1,6 @@
 from collections import deque
 from typing import Optional
-
-from scr.models.Nodo import Nodo
+from Nodo import Nodo
 
 
 class AVL:
@@ -22,15 +21,15 @@ class AVL:
         )
 
 
-    def _factor_balance(self, nodo: Optional[Nodo]) -> int:
+    def _factor_balance(self, nodo: Optional[Nodo]) -> tuple:
         if nodo is None:
             return 0
 
         return (
             self._obtener_altura(nodo.izquierda)
-            - self._obtener_altura(nodo.derecha)
-        )
-    
+            - self._obtener_altura(nodo.derecha) )       
+
+        
 
     def _rotacion_derecha(self, y: Nodo) -> Nodo:
 
@@ -62,26 +61,30 @@ class AVL:
     def insertar(self, valor: int) -> None:
         self.raiz = self._insertar(self.raiz, valor)
 
-    def _insertar(
-        self,
-        nodo: Optional[Nodo],
-        valor: int
-    ) -> Nodo:
+    def _insertar(self, nodo: Optional[Nodo], valor: int) -> Nodo:
 
         if nodo is None:
             return Nodo(valor)
+        if valor[0]!=nodo.valor[0]:
+            if valor[0] < nodo.valor[0]:
+                nodo.izquierda = self._insertar(nodo.izquierda, valor)
 
-        if valor < nodo.valor:
-            nodo.izquierda = self._insertar(
-                nodo.izquierda,
-                valor
-            )
+            elif valor[0] > nodo.valor[0]:
+                nodo.derecha = self._insertar(nodo.derecha, valor)
 
-        elif valor > nodo.valor:
-            nodo.derecha = self._insertar(
-                nodo.derecha,
-                valor
-            )
+        elif valor[1]!=nodo.valor[1]:
+            if valor[1] < nodo.valor[1]:
+                nodo.izquierda = self._insertar(nodo.izquierda, valor)
+
+            elif valor[1] > nodo.valor[1]:
+                nodo.derecha = self._insertar(nodo.derecha, valor)
+
+        elif valor[2]!=nodo.valor[2]:
+            if valor[2] < nodo.valor[2]:
+                nodo.izquierda = self._insertar(nodo.izquierda, valor)
+
+            elif valor[2] > nodo.valor[2]:
+                nodo.derecha = self._insertar(nodo.derecha, valor)  
 
         else:
             return nodo
@@ -208,35 +211,56 @@ class AVL:
         return actual
 
 
-    def eliminar(self, valor: int) -> None:
-        self.raiz = self._eliminar(
-            self.raiz,
-            valor
-        )
+    def eliminar(self, valor: tuple) -> None:
+        self.raiz = self._eliminar(self.raiz, valor)
 
-    def _eliminar(
-        self,
-        raiz: Optional[Nodo],
-        valor: int
-    ) -> Optional[Nodo]:
+    def _eliminar(self,raiz: Optional[Nodo],valor: tuple) -> Optional[Nodo]:
 
         if raiz is None:
             return None
 
+        if valor[0]!=raiz.valor[0]:
+            if valor[0] < raiz.valor[0]:
 
-        if valor < raiz.valor:
+                raiz.izquierda = self._eliminar(
+                    raiz.izquierda,
+                    valor
+                )
 
-            raiz.izquierda = self._eliminar(
-                raiz.izquierda,
-                valor
-            )
+            elif valor[0] > raiz.valor[0]:
 
-        elif valor > raiz.valor:
+                raiz.derecha = self._eliminar(
+                    raiz.derecha,
+                    valor
+                )
+        if valor[1]!=raiz.valor[1]:
+            if valor[1] < raiz.valor[1]:
 
-            raiz.derecha = self._eliminar(
-                raiz.derecha,
-                valor
-            )
+                raiz.izquierda = self._eliminar(
+                    raiz.izquierda,
+                    valor
+                )
+
+            elif valor[1] > raiz.valor[1]:
+
+                raiz.derecha = self._eliminar(
+                    raiz.derecha,
+                    valor
+                )
+        if valor[2]!=raiz.valor[2]:
+            if valor[2] < raiz.valor[2]:
+
+                raiz.izquierda = self._eliminar(
+                    raiz.izquierda,
+                    valor
+                )
+
+            elif valor[2] > raiz.valor[2]:
+
+                raiz.derecha = self._eliminar(
+                    raiz.derecha,
+                    valor
+                )                
 
         else:
 

@@ -3,8 +3,8 @@ from typing import Optional
 
 @dataclass
 class Nodo:
-    valores : tuple
-    izquierda : Optional['Nodo'] = None
+    valor : tuple
+    izquierda : Optional['Nodo'] = None 
     derecha : Optional['Nodo'] = None
     altura: int = 1
 
