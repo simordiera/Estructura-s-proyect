@@ -13,36 +13,42 @@ class BST:
         else:
             self._insertar(self.raiz,valor)
 
-    def _insertar(self, nodo:Nodo, valor:tuple):
-        if valor[0]!=nodo.valor[0]:
-            if valor[0] < nodo.valor[0]:
+    def _insertar(self, nodo:Nodo, valor):
+        if nodo is None:
+            return Nodo(valor)
+
+        clave_valor= valor.get_code()
+        clave_nodo= nodo.valor.get_code()
+
+        if clave_valor[0]!=clave_nodo[0]:
+            if clave_valor[0] < clave_nodo[0]:
                 if nodo.izquierda is None:
                     nodo.izquierda = Nodo(valor)
                 else:
                     self._insertar(nodo.izquierda,valor)
-            elif valor[0] > nodo.valor[0]:
+            elif clave_valor[0] > clave_nodo[0]:
                 if nodo.derecha is None:
                     nodo.derecha = Nodo(valor)
                 else:
                     self._insertar(nodo.derecha,valor)
-        elif valor[1]!=nodo.valor[1]:
-            if valor[1] < nodo.valor[1]:
+        elif clave_valor[1]!=clave_nodo[1]:
+            if clave_valor[1] < clave_nodo[1]:
                 if nodo.izquierda is None:
                     nodo.izquierda = Nodo(valor)
                 else:
                     self._insertar(nodo.izquierda,valor)
-            elif valor[1] > nodo.valor[1]:
+            elif clave_valor[1] > clave_nodo[1]:
                 if nodo.derecha is None:
                     nodo.derecha = Nodo(valor)
                 else:
                     self._insertar(nodo.derecha,valor)
         else:
-            if valor[2] < nodo.valor[2]:
+            if clave_valor[2] < clave_nodo[2]:
                 if nodo.izquierda is None:
                     nodo.izquierda = Nodo(valor)
                 else:
                     self._insertar(nodo.izquierda,valor)
-            elif valor[2] > nodo.valor[2]:
+            elif clave_valor[2] > clave_nodo[2]:
                 if nodo.derecha is None:
                     nodo.derecha = Nodo(valor)
                 else:

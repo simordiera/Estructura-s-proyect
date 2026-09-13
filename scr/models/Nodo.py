@@ -3,7 +3,7 @@ from typing import Optional
 
 @dataclass
 class Nodo:
-    valor : tuple
+    valor : 'Event'
     izquierda : Optional['Nodo'] = None 
     derecha : Optional['Nodo'] = None
     altura: int = 1

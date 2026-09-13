@@ -1,7 +1,19 @@
 class Event:
 
-    def __init__(self, id, magnitude, depth,epicenter, datetime, review, stations, priority, zone, attention_status, code):
+    def __init__(self, id , magnitude, depth,epicenter, datetime, review, stations, attention_status):
         self.set_id(id)
+        self.set_magnitude(magnitude)
+        self.set_depth(depth)
+        self.set_epicenter(epicenter[0], epicenter[1])
+        
+        self.set_datetime = datetime
+        self.set_review = review
+        self.set_stations = stations
+        self.set_attention_status = attention_status
+
+        self.set_zone()
+        self.set_priority()
+
         
     def set_id (self, id):
         if (id>=1 and id<=999999):
@@ -81,3 +93,6 @@ class Event:
         M=self._magnitude
         id=self._id
         return (p, M, id)
+
+    def __str__(self):
+        return str(self.__dict__)
