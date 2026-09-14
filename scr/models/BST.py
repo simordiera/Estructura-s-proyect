@@ -128,59 +128,44 @@ class BST:
     def eliminar(self, valor:tuple)->None:
         self.raiz  =self._eliminar(self.raiz,valor)
 
-    def _eliminar(self,raiz:Optional[Nodo],valor:tuple)->Optional[Nodo]:
+    def _eliminar(self,raiz:Optional[Nodo],valor)->Optional[Nodo]:
         if raiz is None:
             return None
-        if valor[0]!=raiz.valor[0]:
-            if valor[0] < raiz.valor[0]:
-                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
-            elif valor > raiz.valor:
-                raiz.derecha = self._eliminar(raiz.derecha,valor)
-            else:
-                if raiz.es_hoja():
-                    return None
-                if raiz.izquierda is None:
-                    return raiz.derecha
-                if raiz.derecha is None:
-                    return raiz.izquierda
-                sucesor = self._buscar_minimo(raiz.derecha)
-                raiz.valor=sucesor.valor
-                raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
-            return raiz
 
-        elif valor[1]!=raiz.valor[1]:
-            if valor[1] < raiz.valor[1]:
+        clave_valor= valor.get_code()
+        clave_raiz= raiz.valor.get_code()
+
+        if clave_valor[0]!=clave_raiz[0]:
+            if clave_valor[0] < clave_raiz[0]:
                 raiz.izquierda = self._eliminar(raiz.izquierda,valor)
-            elif valor > raiz.valor:
+            elif clave_valor[0] > clave_raiz[0]:
                 raiz.derecha = self._eliminar(raiz.derecha,valor)
-            else:
-                if raiz.es_hoja():
-                    return None
-                if raiz.izquierda is None:
-                    return raiz.derecha
-                if raiz.derecha is None:
-                    return raiz.izquierda
-                sucesor = self._buscar_minimo(raiz.derecha)
-                raiz.valor=sucesor.valor
-                raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
-            return raiz
+
+
+        elif clave_valor[1]!=clave_raiz[1]:
+            if clave_valor[1] < clave_raiz[1]:
+                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
+            elif clave_valor[1] > clave_raiz[1]:
+                raiz.derecha = self._eliminar(raiz.derecha,valor)
+
+
+        elif clave_valor[2]!=clave_raiz[2]:
+            if clave_valor[2] < clave_raiz[2]:
+                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
+            elif clave_valor[2] > clave_raiz[2]:
+                raiz.derecha = self._eliminar(raiz.derecha,valor)
 
         else:
-            if valor[2] < raiz.valor[2]:
-                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
-            elif valor > raiz.valor:
-                raiz.derecha = self._eliminar(raiz.derecha,valor)
-            else:
-                if raiz.es_hoja():
-                    return None
-                if raiz.izquierda is None:
-                    return raiz.derecha
-                if raiz.derecha is None:
-                    return raiz.izquierda
-                sucesor = self._buscar_minimo(raiz.derecha)
-                raiz.valor=sucesor.valor
-                raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
-            return raiz
+            if raiz.es_hoja():
+                return None
+            if raiz.izquierda is None:
+                return raiz.derecha
+            if raiz.derecha is None:
+                return raiz.izquierda
+            sucesor = self._buscar_minimo(raiz.derecha)
+            raiz.valor=sucesor.valor
+            raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
+        return raiz        
         
                         
                 
