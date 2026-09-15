@@ -1,21 +1,21 @@
 import json
-from Nodo import Nodo
+from Node import Node
 from AVL import AVL
 from typing import Optional
 from Event import Event
 
 
 
-def guardar_sismos (sismos):
-    with open("sismos.json", "w") as archivo:
-        json.dumb(sismos, archivo, ident=4)
+def save_earthquakes(earthquakes):
+    with open("sismos.json", "w") as file:
+        json.dumb(earthquakes, file, ident=4)
 
-def cargar_sismos():
-    with open("sismos.json", "r") as archivo:
-        return json.load(archivo)
+def load_earthquakes():
+    with open("sismos.json", "r") as file:
+        return json.load(file)
 
 
-evento1= Event (
+event1 = Event(
     100,
     5.0,
     20.0,
@@ -26,7 +26,7 @@ evento1= Event (
     "pending"
 )
 
-evento2= Event (
+event2 = Event(
     200,
     5.0,
     20.0,
@@ -36,7 +36,7 @@ evento2= Event (
     {"sta01"},
     "pending"
 )
-evento3= Event (
+event3 = Event(
     300,
     5.0,
     20.0,
@@ -47,7 +47,7 @@ evento3= Event (
     "pending"
 )
 
-evento4= Event (
+event4 = Event(
     400,
     5.0,
     20.0,
@@ -57,7 +57,7 @@ evento4= Event (
     {"sta01"},
     "pending"
 )
-evento5= Event (
+event5 = Event(
     500,
     5.0,
     20.0,
@@ -68,7 +68,7 @@ evento5= Event (
     "pending"
 )
 
-evento6= Event (
+event6 = Event(
     600,
     5.0,
     20.0,
@@ -80,41 +80,41 @@ evento6= Event (
 )
 
 
-arbol=AVL()
-arbol.insertar(evento1)
-arbol.insertar(evento2)
-arbol.insertar(evento3)
-arbol.insertar(evento4)
-arbol.insertar(evento5)
-arbol.insertar(evento6)
+tree = AVL()
+tree.insert(event1)
+tree.insert(event2)
+tree.insert(event3)
+tree.insert(event4)
+tree.insert(event5)
+tree.insert(event6)
 
 """
-lista=arbol.anchura()
-for evento in lista:
-    print(evento)
+items = tree.breadth_first()
+for event in items:
+    print(event)
 
 print(" ")
 
-arbol.balancear()
+tree.balance()
 
-lista=arbol.anchura()
-for evento in lista:
-    print(evento)
+items = tree.breadth_first()
+for event in items:
+    print(event)
 print (" ")
 """
 
-arbol.eliminar(evento3)
+tree.delete(event3)
 
-lista=arbol.anchura()
-for evento in lista:
-    print(evento)
+items = tree.breadth_first()
+for event in items:
+    print(event)
 
 print(" ")
 
-arbol.balancear()
+tree.balance()
 
-lista=arbol.anchura()
-for evento in lista:
-    print(evento)
+items = tree.breadth_first()
+for event in items:
+    print(event)
 print (" ")
 

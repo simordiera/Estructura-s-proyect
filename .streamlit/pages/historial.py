@@ -3,11 +3,11 @@ import pandas as pd
 #ESTE TAMPOCO M LO TOQUEN
 st.title("historial de los sismos creados", text_alignment="center")
 
-if "datos" in st.session_state:
+if "data" in st.session_state:
 
-    datos = st.session_state.datos
+    data = st.session_state.data
 
-    df = pd.DataFrame(datos)
+    df = pd.DataFrame(data)
 
     event = st.dataframe(
         df,

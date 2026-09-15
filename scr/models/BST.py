@@ -1,237 +1,237 @@
 from collections import deque
 from typing import Optional
-from Nodo import Nodo
+from Node import Node
 
 
 class BST:
     def __init__(self):
-        self.raiz = None
+        self.root = None
 
-    def insertar(self,valor:tuple):
-        if self.raiz is None:
-            self.raiz=Nodo(valor)
+    def insert(self, value: tuple):
+        if self.root is None:
+            self.root = Node(value)
         else:
-            self._insertar(self.raiz,valor)
+            self._insert(self.root, value)
 
-    def _insertar(self, nodo:Nodo, valor):
-        if nodo is None:
-            return Nodo(valor)
+    def _insert(self, node: Node, value):
+        if node is None:
+            return Node(value)
 
-        clave_valor= valor.get_code()
-        clave_nodo= nodo.valor.get_code()
+        value_key = value.get_code()
+        node_key = node.value.get_code()
 
-        if clave_valor[0]!=clave_nodo[0]:
-            if clave_valor[0] < clave_nodo[0]:
-                if nodo.izquierda is None:
-                    nodo.izquierda = Nodo(valor)
+        if value_key[0] != node_key[0]:
+            if value_key[0] < node_key[0]:
+                if node.left is None:
+                    node.left = Node(value)
                 else:
-                    self._insertar(nodo.izquierda,valor)
-            elif clave_valor[0] > clave_nodo[0]:
-                if nodo.derecha is None:
-                    nodo.derecha = Nodo(valor)
+                    self._insert(node.left, value)
+            elif value_key[0] > node_key[0]:
+                if node.right is None:
+                    node.right = Node(value)
                 else:
-                    self._insertar(nodo.derecha,valor)
-        elif clave_valor[1]!=clave_nodo[1]:
-            if clave_valor[1] < clave_nodo[1]:
-                if nodo.izquierda is None:
-                    nodo.izquierda = Nodo(valor)
+                    self._insert(node.right, value)
+        elif value_key[1] != node_key[1]:
+            if value_key[1] < node_key[1]:
+                if node.left is None:
+                    node.left = Node(value)
                 else:
-                    self._insertar(nodo.izquierda,valor)
-            elif clave_valor[1] > clave_nodo[1]:
-                if nodo.derecha is None:
-                    nodo.derecha = Nodo(valor)
+                    self._insert(node.left, value)
+            elif value_key[1] > node_key[1]:
+                if node.right is None:
+                    node.right = Node(value)
                 else:
-                    self._insertar(nodo.derecha,valor)
+                    self._insert(node.right, value)
         else:
-            if clave_valor[2] < clave_nodo[2]:
-                if nodo.izquierda is None:
-                    nodo.izquierda = Nodo(valor)
+            if value_key[2] < node_key[2]:
+                if node.left is None:
+                    node.left = Node(value)
                 else:
-                    self._insertar(nodo.izquierda,valor)
-            elif clave_valor[2] > clave_nodo[2]:
-                if nodo.derecha is None:
-                    nodo.derecha = Nodo(valor)
+                    self._insert(node.left, value)
+            elif value_key[2] > node_key[2]:
+                if node.right is None:
+                    node.right = Node(value)
                 else:
-                    self._insertar(nodo.derecha,valor)
+                    self._insert(node.right, value)
 
             
 
     def pre_order(self) -> None:
-        if self.raiz is None:
+        if self.root is None:
             return
-        lista = []
-        lista = self._pre_order(self.raiz, lista)
-        return lista
+        items = []
+        items = self._pre_order(self.root, items)
+        return items
 
-    def _pre_order(self,raiz:Nodo,lista)->None:
-        if raiz is None:
-            return lista
-        lista.append(raiz.valor)
-        lista = self._pre_order(raiz.izquierda, lista)
-        lista = self._pre_order(raiz.derecha, lista)
-        return lista
+    def _pre_order(self, root: Node, items) -> None:
+        if root is None:
+            return items
+        items.append(root.value)
+        items = self._pre_order(root.left, items)
+        items = self._pre_order(root.right, items)
+        return items
 
     def in_order(self)->None:
-        if self.raiz is None:
+        if self.root is None:
             return
-        lista = []
-        self._in_order(self.raiz, lista)
-        return lista
+        items = []
+        self._in_order(self.root, items)
+        return items
 
-    def _in_order(self,raiz:Nodo, lista)->None:
-        if raiz is None:
-            return lista
-        lista = self._in_order(raiz.izquierda, lista)
-        lista.append(raiz.valor)
-        lista = self._in_order(raiz.derecha, lista)
-        return lista
+    def _in_order(self, root: Node, items) -> None:
+        if root is None:
+            return items
+        items = self._in_order(root.left, items)
+        items.append(root.value)
+        items = self._in_order(root.right, items)
+        return items
 
     def post_order(self)->None:
-        if self.raiz is None:
+        if self.root is None:
             return
-        lista = []
-        self._post_order(self.raiz, lista)
-        return lista
+        items = []
+        self._post_order(self.root, items)
+        return items
 
-    def _post_order(self,raiz:Nodo, lista)->None:
-        if raiz is None:
-            return lista
-        lista = self._post_order(raiz.izquierda, lista)
-        lista = self._post_order(raiz.derecha, lista)
-        lista.append(raiz.valor)
-        return lista
+    def _post_order(self, root: Node, items) -> None:
+        if root is None:
+            return items
+        items = self._post_order(root.left, items)
+        items = self._post_order(root.right, items)
+        items.append(root.value)
+        return items
     
-    def anchura(self)->None:
-        if self.raiz is None:
+    def breadth_first(self) -> None:
+        if self.root is None:
             return
-        lista=[]
-        return self._anchura(self.raiz,lista)
+        items = []
+        return self._breadth_first(self.root, items)
 
-    def _anchura(self,raiz:Nodo, lista)->None:
-        cola=deque([raiz])
-        while cola:
-            nodo = cola.popleft()
-            lista.append(nodo.valor)
-            if nodo.izquierda is not None:
-                cola.append(nodo.izquierda)
-            if nodo.derecha is not None:
-                cola.append(nodo.derecha)
-        return lista
+    def _breadth_first(self, root: Node, items) -> None:
+        queue = deque([root])
+        while queue:
+            node = queue.popleft()
+            items.append(node.value)
+            if node.left is not None:
+                queue.append(node.left)
+            if node.right is not None:
+                queue.append(node.right)
+        return items
 
-    def _buscar_minimo(self,raiz:Nodo)->Nodo:
-        actual = raiz
-        while actual.izquierda is not None:
-            actual = actual.izquierda
+    def _find_minimum(self, root: Node) -> Node:
+        current = root
+        while current.left is not None:
+            current = current.left
         print(" ")
-        return actual
+        return current
 
-    def eliminar(self, valor:tuple)->None:
-        self.raiz  =self._eliminar(self.raiz,valor)
+    def delete(self, value: tuple) -> None:
+        self.root = self._delete(self.root, value)
 
-    def _eliminar(self,raiz:Optional[Nodo],valor)->Optional[Nodo]:
-        if raiz is None:
+    def _delete(self, root: Optional[Node], value) -> Optional[Node]:
+        if root is None:
             return None
 
-        clave_valor= valor.get_code()
-        clave_raiz= raiz.valor.get_code()
+        value_key = value.get_code()
+        root_key = root.value.get_code()
 
-        if clave_valor[0]!=clave_raiz[0]:
-            if clave_valor[0] < clave_raiz[0]:
-                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
-            elif clave_valor[0] > clave_raiz[0]:
-                raiz.derecha = self._eliminar(raiz.derecha,valor)
-
-
-        elif clave_valor[1]!=clave_raiz[1]:
-            if clave_valor[1] < clave_raiz[1]:
-                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
-            elif clave_valor[1] > clave_raiz[1]:
-                raiz.derecha = self._eliminar(raiz.derecha,valor)
+        if value_key[0] != root_key[0]:
+            if value_key[0] < root_key[0]:
+                root.left = self._delete(root.left, value)
+            elif value_key[0] > root_key[0]:
+                root.right = self._delete(root.right, value)
 
 
-        elif clave_valor[2]!=clave_raiz[2]:
-            if clave_valor[2] < clave_raiz[2]:
-                raiz.izquierda = self._eliminar(raiz.izquierda,valor)
-            elif clave_valor[2] > clave_raiz[2]:
-                raiz.derecha = self._eliminar(raiz.derecha,valor)
+        elif value_key[1] != root_key[1]:
+            if value_key[1] < root_key[1]:
+                root.left = self._delete(root.left, value)
+            elif value_key[1] > root_key[1]:
+                root.right = self._delete(root.right, value)
+
+
+        elif value_key[2] != root_key[2]:
+            if value_key[2] < root_key[2]:
+                root.left = self._delete(root.left, value)
+            elif value_key[2] > root_key[2]:
+                root.right = self._delete(root.right, value)
 
         else:
-            if raiz.es_hoja():
+            if root.is_leaf():
                 return None
-            if raiz.izquierda is None:
-                return raiz.derecha
-            if raiz.derecha is None:
-                return raiz.izquierda
-            sucesor = self._buscar_minimo(raiz.derecha)
-            raiz.valor=sucesor.valor
-            raiz.derecha=self._eliminar(raiz.derecha,sucesor.valor)
-        return raiz        
+            if root.left is None:
+                return root.right
+            if root.right is None:
+                return root.left
+            successor = self._find_minimum(root.right)
+            root.value = successor.value
+            root.right = self._delete(root.right, successor.value)
+        return root
         
                         
                 
 
-    def altura(self) -> int:
-        if self.raiz is None:
+    def height(self) -> int:
+        if self.root is None:
             return -1
-        return self._altura(self.raiz)
+        return self._height(self.root)
 
-    def _altura(self, nodo: Optional[Nodo]) -> int:
-        if nodo is None:
+    def _height(self, node: Optional[Node]) -> int:
+        if node is None:
             return -1
-        return 1 + max(self._altura(nodo.izquierda), self._altura(nodo.derecha))
+        return 1 + max(self._height(node.left), self._height(node.right))
 
-    def peso(self) -> int:
-        if self.raiz is None:
+    def size(self) -> int:
+        if self.root is None:
             return 0
-        return self._peso(self.raiz)
+        return self._size(self.root)
 
-    def _peso(self, nodo: Optional[Nodo]) -> int:
-        if nodo is None:
+    def _size(self, node: Optional[Node]) -> int:
+        if node is None:
             return 0
-        return 1 + self._peso(nodo.izquierda) + self._peso(nodo.derecha)
+        return 1 + self._size(node.left) + self._size(node.right)
 
-    def recorrido_por_ramas(self) -> None:
-        if self.raiz is None:
+    def branch_traversal(self) -> None:
+        if self.root is None:
             return
-        self._recorrido_por_ramas(self.raiz, [])
+        self._branch_traversal(self.root, [])
 
-    def _recorrido_por_ramas(self, nodo: Nodo, camino: list) -> None:
-        camino.append(nodo.valor)
-        if nodo.es_hoja():
-            print(" -> ".join(map(str, camino)))
+    def _branch_traversal(self, node: Node, path: list) -> None:
+        path.append(node.value)
+        if node.is_leaf():
+            print(" -> ".join(map(str, path)))
         else:
-            if nodo.izquierda is not None:
-                self._recorrido_por_ramas(nodo.izquierda, camino.copy())
-            if nodo.derecha is not None:
-                self._recorrido_por_ramas(nodo.derecha, camino.copy())
+            if node.left is not None:
+                self._branch_traversal(node.left, path.copy())
+            if node.right is not None:
+                self._branch_traversal(node.right, path.copy())
 
-    def nivel_de_un_nodo(self, valor: int) -> int:
-        if self.raiz is None:
+    def node_level(self, value: int) -> int:
+        if self.root is None:
             return -1
-        return self._nivel_de_un_nodo(self.raiz, valor, 0)
+        return self._node_level(self.root, value, 0)
 
-    def _nivel_de_un_nodo(self, nodo: Optional[Nodo], valor: int, nivel_actual: int) -> int:
-        if nodo is None:
+    def _node_level(self, node: Optional[Node], value: int, current_level: int) -> int:
+        if node is None:
             return -1
-        if nodo.valor == valor:
-            return nivel_actual
-        if valor < nodo.valor:
-            return self._nivel_de_un_nodo(nodo.izquierda, valor, nivel_actual + 1)
+        if node.value == value:
+            return current_level
+        if value < node.value:
+            return self._node_level(node.left, value, current_level + 1)
         else:
-            return self._nivel_de_un_nodo(nodo.derecha, valor, nivel_actual + 1)
+            return self._node_level(node.right, value, current_level + 1)
 
-    def cantidad_de_nodos_por_nivel(self) -> dict:
-        """Retorna un diccionario {nivel: cantidad_de_nodos}."""
-        if self.raiz is None:
+    def nodes_per_level(self) -> dict:
+        """Return a dictionary mapping each level to its node count."""
+        if self.root is None:
             return {}
-        conteo = {}
-        self._cantidad_de_nodos_por_nivel(self.raiz, 0, conteo)
-        return conteo
+        counts = {}
+        self._nodes_per_level(self.root, 0, counts)
+        return counts
 
-    def _cantidad_de_nodos_por_nivel(self, nodo: Optional[Nodo], nivel: int, conteo: dict) -> None:
-        if nodo is None:
+    def _nodes_per_level(self, node: Optional[Node], level: int, counts: dict) -> None:
+        if node is None:
             return
-        conteo[nivel] = conteo.get(nivel, 0) + 1
-        self._cantidad_de_nodos_por_nivel(nodo.izquierda, nivel + 1, conteo)
-        self._cantidad_de_nodos_por_nivel(nodo.derecha, nivel + 1, conteo)
+        counts[level] = counts.get(level, 0) + 1
+        self._nodes_per_level(node.left, level + 1, counts)
+        self._nodes_per_level(node.right, level + 1, counts)
 

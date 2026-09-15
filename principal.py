@@ -17,10 +17,10 @@ st.title("SismoLab", text_alignment="center")
 import streamlit as st
 import json
 
-if "mostrar_opciones" not in st.session_state:
-    st.session_state.mostrar_opciones = False
-if "mostrar_formulario" not in st.session_state:
-    st.session_state.mostrar_formulario = False
+if "show_options" not in st.session_state:
+    st.session_state.show_options = False
+if "show_form" not in st.session_state:
+    st.session_state.show_form = False
 
 #Markdown sirve pa utilizar css y html, o para mostrar texto, el unsafe permite que el streamlit permita el css
 #st.markdown("""
@@ -41,54 +41,54 @@ if "mostrar_formulario" not in st.session_state:
 
 # boton pa crear
 if st.button("crear"):
-    st.session_state.mostrar_opciones = True
+    st.session_state.show_options = True
 
 # mostrar los otros dos botoncitos
-if st.session_state.mostrar_opciones:
+if st.session_state.show_options:
     #divede ls cosas en dos columnas, para que así los botoncitos queden al lado.
     col1, col2 = st.columns(2)
 
     #oprimir boton para poder cargar un archivo de tipo JSON (TENGO QUE CORREGIR LO DE QUE SE CIERRA SOLO)
     with col1:
         if st.button("Subir archivo JSON"):
-            archivo = st.file_uploader("Puedes subir tu archivo aquí! :)",
+            uploaded_file = st.file_uploader("Puedes subir tu archivo aquí! :)",
             type=["json"]
             )
 
-            if archivo is not None:
-                datos= json.load(archivo)
+            if uploaded_file is not None:
+                data = json.load(uploaded_file)
                 st.success("Archivo cargado correctamente :)")
-                st.session_state.datos = datos
-                st.session_state.mostrar_opciones = False
+                st.session_state.data = data
+                st.session_state.show_options = False
                 st.rerun()
 
     #segundo boton para llenar los datos manalmente(tengo que )
     with col2:
         if st.button("Llenar datos manualmente"):
-            st.session_state.mostrar_formulario = True
+            st.session_state.show_form = True
 
-        if st.session_state.mostrar_formulario:
+        if st.session_state.show_form:
             with st.form("my_form"):
                 st.title("LLena la información del sismo :)")
-                identificador=st.text_input("ingrese el identificador")
-                magnitud=st.text_input("ingrese la magnitud")
-                coordenadas=st.text_input("coordenadas")
-                fecha=st.text_input("fecha")
-                hora=st.text_input("hora")
-                lugar_reporte=st.text_input("lugar del reporte")
+                identifier = st.text_input("ingrese el identificador")
+                magnitude = st.text_input("ingrese la magnitud")
+                coordinates = st.text_input("coordenadas")
+                date = st.text_input("fecha")
+                time = st.text_input("hora")
+                report_location = st.text_input("lugar del reporte")
                 submitted = st.form_submit_button("Subir archivo")
 
                 if submitted:
-                    st.session_state.datos = [{
-                        "identificador": identificador,
-                        "magnitud": magnitud,
-                        "coordenadas": coordenadas,
-                        "fecha": fecha,
-                        "hora": hora,
-                        "lugar_reporte": lugar_reporte
+                    st.session_state.data = [{
+                        "identificador": identifier,
+                        "magnitud": magnitude,
+                        "coordenadas": coordinates,
+                        "fecha": date,
+                        "hora": time,
+                        "lugar_reporte": report_location
                     }]
-                    st.session_state.mostrar_opciones = False
-                    st.session_state.mostrar_formulario = False
+                    st.session_state.show_options = False
+                    st.session_state.show_form = False
                     st.rerun()
 #aparece en el menu cuando se meten en la pag prin
 st.sidebar.success('ya no aguanto, ya no aguanto')
