@@ -50,6 +50,7 @@ class Event:
             self._epicenter=(x,y)
             return True
         return False
+    
     def get_epicenter(self):
         epicenter=self._epicenter
         return epicenter

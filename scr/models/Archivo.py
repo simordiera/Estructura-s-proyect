@@ -118,3 +118,21 @@ for event in items:
     print(event)
 print (" ")
 
+
+result = tree.research(100)
+
+'''
+if result is not None:
+    print(result.value)
+else:
+    print("No se encontró el evento")
+
+
+result1 = tree.compare(100)
+
+if result1 is not None:
+    for node in result1:
+        print(node.value)
+else:
+    print("No hay similitudes")
+    '''
