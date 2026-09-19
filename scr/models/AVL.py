@@ -432,7 +432,7 @@ class AVL:
         value_key_magnitude=value_key.value.get_magnitude()
 
         if (value_key_magnitude> node_key_magnitude):
-            if ( 0< (((value_key_time)-(node_key_time)).total_seconds() / 3600) <= 48):
+            if ( 0< (((node_key_time)-(value_key_time)).total_seconds() / 3600) <= 48):
                 if (( ((((value_key_epicenter[0])-(node_key_epicenter[0]))**2) + (((value_key_epicenter[1])-(node_key_epicenter[1]))**2))**(1/2)) <= 40):
 
                     list_similitude.append(node)
@@ -441,4 +441,4 @@ class AVL:
         self._compare(node.right, value_key, list_similitude)
 
         return list_similitude
-               
+
