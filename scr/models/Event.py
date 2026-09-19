@@ -1,18 +1,36 @@
+from datetime import datetime
 class Event:
 
-    def __init__(self, id , magnitude, depth,epicenter, datetime, review, stations, attention_status):
+    def __init__(self, id , magnitude, depth,epicenter, date, review, stations, attention_status):
         self.set_id(id)
         self.set_magnitude(magnitude)
         self.set_depth(depth)
         self.set_epicenter(epicenter[0], epicenter[1])
         
-        self.set_datetime = datetime
+        self.set_datetime(date)
         self.set_review = review
         self.set_stations = stations
         self.set_attention_status = attention_status
 
         self.set_zone()
         self.set_priority()
+
+    #def set_review (self, revised):
+    
+
+    def set_datetime(self, date):
+
+        date = datetime.fromisoformat(date)
+        today = datetime.now()
+
+        if date > today:
+            return False
+
+        self.datetime = date
+        return True
+
+    def get_datetime(self):
+        return self.datetime
 
         
     def set_id (self, id):
@@ -50,6 +68,7 @@ class Event:
             self._epicenter=(x,y)
             return True
         return False
+    
     def get_epicenter(self):
         epicenter=self._epicenter
         return epicenter

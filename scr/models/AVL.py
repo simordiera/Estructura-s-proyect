@@ -383,3 +383,62 @@ class AVL:
             level + 1,
             counts
         )
+
+    def research(self, id) -> None:
+        return  self._research(self.root, id)
+    
+    def _research(self, node: Optional[Node], id) -> Node:
+
+        if node is None:
+            return None
+        value_key = id
+        node_key = node.value.get_code()
+
+        if value_key == node_key[2]:
+            return node
+
+        else:
+            result = self._research(node.left, id)
+
+            if result is not None:
+                return result
+
+            return self._research(node.right, id)
+
+
+
+    def compare(self, id) -> None:
+
+        list_similitude=[]
+        value_key = self.research(id)
+
+        if value_key is None:
+            return list_similitude
+        
+        self._compare(self.root, value_key, list_similitude)
+        return list_similitude
+    
+    def _compare(self, node: Optional[Node], value_key, list_similitude) -> Node:
+
+        if node is None:
+            return None
+        
+        node_key_epicenter = node.value.get_epicenter()
+        node_key_time = node.value.get_datetime()
+        node_key_magnitude= node.value.get_magnitude()
+
+        value_key_epicenter=value_key.value.get_epicenter()
+        value_key_time = value_key.value.get_datetime()
+        value_key_magnitude=value_key.value.get_magnitude()
+
+        if (value_key_magnitude> node_key_magnitude):
+            if ( 0< (((node_key_time)-(value_key_time)).total_seconds() / 3600) <= 48):
+                if (( ((((value_key_epicenter[0])-(node_key_epicenter[0]))**2) + (((value_key_epicenter[1])-(node_key_epicenter[1]))**2))**(1/2)) <= 40):
+
+                    list_similitude.append(node)
+
+        self._compare(node.left, value_key, list_similitude)    
+        self._compare(node.right, value_key, list_similitude)
+
+        return list_similitude
+
