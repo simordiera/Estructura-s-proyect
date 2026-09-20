@@ -8,13 +8,13 @@ MODELS_PATH = Path(__file__).resolve().parents[1] / "scr" / "models"
 if str(MODELS_PATH) not in sys.path:
     sys.path.insert(0, str(MODELS_PATH))
 
-from AVL import AVL
+from BST import BST
 from Event import Event
 
 
-st.set_page_config(page_title="Visualización AVL", page_icon="🌐", layout="wide")
-st.title("Visualización del árbol AVL")
-st.caption("Ejemplos del proyecto SismoLab ordenados por la clave (prioridad, magnitud, identificador).")
+st.set_page_config(page_title="Visualización BST", page_icon="🌳", layout="wide")
+st.title("Visualización del árbol BST")
+st.caption("Comparación del árbol BST del proyecto SismoLab con la clave (prioridad, magnitud, identificador).")
 
 
 def create_example_events():
@@ -71,7 +71,7 @@ def append_dot_edges(node, lines):
     for child, side in ((node.left, "I"), (node.right, "D")):
         if child is None:
             empty_id = f"empty_{id(node)}_{side}"
-            lines.append(f'    {empty_id} [label="∅", shape=point];')
+            lines.append(f'    {empty_id} [label="vacio", shape=point];')
             lines.append(f'    {current_id} -> {empty_id} [style=dashed];')
         else:
             lines.append(f'    {current_id} -> {dot_node_id(child)};')
@@ -80,13 +80,13 @@ def append_dot_edges(node, lines):
 
 def tree_to_dot(tree):
     lines = [
-        "digraph AVL {",
+        "digraph BST {",
         "    graph [rankdir=TB, bgcolor=\"transparent\", nodesep=0.45, ranksep=0.65];",
-        "    node [shape=box, style=\"rounded,filled\", fillcolor=\"#E8F1F2\", color=\"#24545A\", fontname=\" sans-serif\"];",
-        "    edge [color=\"#6C7A80\", arrowsize=0.7];",
+        "    node [shape=box, style=\"rounded,filled\", fillcolor=\"#F4EBDC\", color=\"#76552B\", fontname=\" sans-serif\"];",
+        "    edge [color=\"#84745F\", arrowsize=0.7];",
     ]
     if tree.root is None:
-        lines.append('    empty [label="Árbol vacío", shape=box];')
+        lines.append('    empty [label="Arbol vacio", shape=box];')
     else:
         append_dot_edges(tree.root, lines)
     lines.append("}")
@@ -119,18 +119,13 @@ def event_rows(tree):
     return rows
 
 
-def format_events(events):
-    return {f"SIS-{event.get_id():06d}": event for event in events}
-
-
 with st.sidebar:
     st.header("Ejemplo")
     insertion_order = st.selectbox(
-        "Orden de inserción",
+        "Orden de insercion",
         ("Orden del archivo", "Clave ascendente", "Clave descendente"),
     )
-    balance_tree = st.checkbox("Aplicar balanceo AVL", value=True)
-    st.info("Los eventos de ejemplo se reconstruyen en cada cambio para evitar modificar otros estados de la aplicación.")
+    st.info("El BST conserva el orden de insercion y no aplica rotaciones ni balanceo AVL.")
 
 events = create_example_events()
 if insertion_order == "Clave ascendente":
@@ -138,17 +133,12 @@ if insertion_order == "Clave ascendente":
 elif insertion_order == "Clave descendente":
     events.sort(key=lambda event: event.get_code(), reverse=True)
 
-tree = AVL()
+tree = BST()
 for event in events:
     tree.insert(event)
-if balance_tree:
-    tree.balance()
 
-st.subheader("Árbol activo")
-if not balance_tree:
-    st.warning("El árbol se muestra después de insertar, sin ejecutar la recuperación de balanceo.")
-else:
-    st.success("El balanceo se aplicó después de las inserciones del ejemplo.")
+st.subheader("Arbol activo")
+st.info("Este arbol muestra la estructura BST sin balanceo, para compararla con el AVL.")
 
 left_column, right_column = st.columns([2, 1])
 with left_column:
@@ -156,7 +146,7 @@ with left_column:
 with right_column:
     st.metric("Eventos activos", len(events))
     st.metric("Altura", calculated_height(tree.root))
-    st.metric("Raíz", f"SIS-{tree.root.value.get_id():06d}" if tree.root else "-",)
+    st.metric("Raiz", f"SIS-{tree.root.value.get_id():06d}" if tree.root else "-")
     st.metric("Hojas", sum(1 for row in event_rows(tree) if row["Altura"] == 0))
 
 st.subheader("Detalle de nodos")
@@ -174,6 +164,6 @@ for column, (title, traversal) in zip(traversal_columns, traversals):
     with column:
         identifiers = [f"SIS-{event.get_id():06d}" for event in (traversal or [])]
         st.write(f"**{title}**")
-        st.code(" → ".join(identifiers) if identifiers else "Árbol vacío")
+        st.code(" -> ".join(identifiers) if identifiers else "Arbol vacio")
 
-st.caption("Las líneas discontinuas representan enlaces vacíos. La profundidad del nodo es distinta de la profundidad del hipocentro.")
+st.caption("Las lineas discontinuas representan enlaces vacios. La profundidad del nodo es distinta de la profundidad del hipocentro.")
