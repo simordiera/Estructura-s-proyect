@@ -442,3 +442,9 @@ class AVL:
 
         return list_similitude
 
+
+    def file (self, text):
+        archive= []
+        if (text):
+            self._archivar(texto, archive)
+            return 
