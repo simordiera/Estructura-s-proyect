@@ -59,6 +59,7 @@ class AVL:
 
 
     def insert(self, value) -> None:
+        self.historic (value, "insert")
         self.root = self._insert(self.root, value)
 
     def _insert(self, node: Optional[Node], value) -> Node:
@@ -93,8 +94,11 @@ class AVL:
             return node
 
         return node
+
         
     def balance (self) -> None:
+        
+        self.historic (None, "balance")
         self.root = self._balance(self.root)
 
     def _balance(self, node: Optional[Node]) -> Node:
@@ -215,34 +219,41 @@ class AVL:
         return current
 
 
-    def delete(self, value) -> None:
-        self.root = self._delete(self.root, value)
+    def delete(self, id):
 
-    def _delete(self, root: Optional[Node], value) -> Optional[Node]:
+        earthquake=self.research(id)
+        if (earthquake is None):
+            return None
+        else:
+            self.root = self._delete(self.root, earthquake)
+            self.historic(earthquake, "delete")
+            return earthquake
+
+    def _delete(self, root: Optional[Node], earthquake ) -> Optional[Node]:
 
         if root is None:
             return None
         
-        value_key = value.get_code()
+        value_key = earthquake.value.get_code()
         root_key = root.value.get_code()
         
         if value_key[0] != root_key[0]:
             if value_key[0] < root_key[0]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left, earthquake)
             elif value_key[0] > root_key[0]:
-                root.right = self._delete(root.right, value)
+                root.right = self._delete(root.right, earthquake)
 
         elif value_key[1] != root_key[1]:
             if value_key[1] < root_key[1]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left,earthquake )
             elif value_key[1] > root_key[1]:
-                root.right = self._delete(root.right, value)
+                root.right = self._delete(root.right, earthquake)
 
         elif value_key[2] != root_key[2]:
             if value_key[2] < root_key[2]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left, earthquake)
             elif value_key[2] > root_key[2]:
-                root.right = self._delete(root.right, value)
+                root.right = self._delete(root.right, earthquake)
 
         else:
             if root.is_leaf():
@@ -253,7 +264,8 @@ class AVL:
                 return root.left
             successor = self._find_minimum(root.right)
             root.value = successor.value
-            root.right = self._delete(root.right, successor.value)
+            root.right = self._delete(root.right, successor)
+
         return root
         
     def height(self) -> int:
@@ -384,7 +396,7 @@ class AVL:
             counts
         )
 
-    def research(self, id) -> None:
+    def research(self, id,) -> None:
         return  self._research(self.root, id)
     
     def _research(self, node: Optional[Node], id) -> Node:
@@ -405,7 +417,7 @@ class AVL:
 
             return self._research(node.right, id)
 
-
+        self.historic (node, "research")
 
     def compare(self, id) -> None:
 
@@ -416,7 +428,9 @@ class AVL:
             return list_similitude
         
         self._compare(self.root, value_key, list_similitude)
+        self.historic ("compare")
         return list_similitude
+
     
     def _compare(self, node: Optional[Node], value_key, list_similitude) -> Node:
 
@@ -443,8 +457,25 @@ class AVL:
         return list_similitude
 
 
-    def file (self, text):
-        archive= []
+    def historic (self, node: Optional[Node], text):
+        list_historic= []
         if (text):
-            self._archivar(texto, archive)
-            return 
+            self._historic(text, list_historic)
+            return list_historic
+        else:
+            return list_historic
+
+    def _historic(self, texto, list_historic):
+        if (texto == "insert"):
+            list_historic.append("se inserto un nodo")
+        elif (texto == "delete"):
+            list_historic.append("se elimino un nodo")
+        elif (texto == "balance"):
+            list_historic.append("se balanceo el arbol")
+        elif (texto == "research"):
+            list_historic.append("se busco un nodo")
+        elif (texto == "compare"):
+            list_historic.append("se comparo un nodo")
+
+        return list_historic
+        

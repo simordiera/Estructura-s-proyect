@@ -103,7 +103,7 @@ for event in items:
 print (" ")
 """
 
-tree.delete(event3)
+tree.delete(100)
 
 items = tree.breadth_first()
 for event in items:
