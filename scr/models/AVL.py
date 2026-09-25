@@ -437,6 +437,4 @@ class AVL:
 
         return list_similitude
 
-    
-        
-        
+    #def historic ():
