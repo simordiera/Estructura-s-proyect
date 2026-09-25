@@ -142,3 +142,9 @@ if result1:
         print(f" la replica es: {nodo.value}")
 else:
     print("No hay replicas")
+
+
+list_historic=tree.historic()
+for h in list_historic:
+    print(h)
+print (" ")
