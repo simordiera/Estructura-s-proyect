@@ -437,4 +437,6 @@ class AVL:
 
         return list_similitude
 
+    def edit_event():
+
     #def historic ():
