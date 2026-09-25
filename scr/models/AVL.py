@@ -60,7 +60,6 @@ class AVL:
 
 
     def insert(self, value) -> None:
-        self.historic (None, "insert")
         self.root = self._insert(self.root, value)
 
     def _insert(self, node: Optional[Node], value) -> Node:
@@ -98,8 +97,6 @@ class AVL:
 
         
     def balance (self) -> None:
-
-        self.historic (None, "balance")
         self.root = self._balance(self.root)
 
     def _balance(self, node: Optional[Node]) -> Node:
@@ -141,7 +138,6 @@ class AVL:
 
 
     def pre_order(self) -> None:
-        self.historic (None, "pre_order")
         if self.root is None:
             return
         items = []
@@ -158,7 +154,6 @@ class AVL:
 
 
     def in_order(self)->None:
-        self.historic (None, "in_order")
         if self.root is None:
             return
         items = []
@@ -177,7 +172,6 @@ class AVL:
 
 
     def post_order(self) -> None:
-        self.historic (None, "post_order")
         if self.root is None:
             return
         items = []
@@ -194,7 +188,6 @@ class AVL:
 
 
     def breadth_first(self) -> None:
-        self.historic (None, "breadth_first")
         if self.root is None:
             return
         items = []
@@ -213,7 +206,6 @@ class AVL:
 
 
     def _find_minimum(self, root: Node) -> Node:
-        self.historic (None, "_find_minimum")
         current = root
         while current.left is not None:
             current = current.left
@@ -221,12 +213,10 @@ class AVL:
 
 
     def delete(self, id):
-    
         earthquake=self.research(id)
         if (earthquake is None):
             return None
         else:
-            self.historic(None, "delete")
             self.root = self._delete(self.root, earthquake)
             return earthquake
 
@@ -278,7 +268,6 @@ class AVL:
         self,
         node: Optional[Node]
     ) -> int:
-        self.historic (None, "height")
         if node is None:
             return -1
         return 1 + max(
@@ -296,7 +285,6 @@ class AVL:
         self,
         node: Optional[Node]
     ) -> int:
-        self.historic (None, "size")
         if node is None:
             return 0
         
@@ -392,7 +380,6 @@ class AVL:
         )  
     
     def research(self, id,) -> None:
-        self.historic (None, "research")
         return  self._research(self.root, id)
     
     def _research(self, node: Optional[Node], id) -> Node:
@@ -423,7 +410,6 @@ class AVL:
             return list_similitude
         
         self._compare(self.root, value_key, list_similitude)
-        self.historic (None, "compare")
         return list_similitude
 
     
@@ -451,48 +437,6 @@ class AVL:
 
         return list_similitude
 
-
-    def historic (self, node: Optional[Node]=None, text=None)-> Node:
-        if (text is None):
-            return self.list_historic
-        else:
-            return self._historic(node,text,self.list_historic)
+    
         
-    def _historic(self, node, texto, list_historic):
-        if (texto == "insert"):
-            list_historic.append("se inserto un nodo")
-
-        elif (texto == "delete"):
-            list_historic.append("se elimino un nodo")
-            list_historic.pop(-2)
-
-        elif (texto == "balance"):
-            list_historic.append("se balanceo el arbol")
-
-        elif (texto == "research"):
-            list_historic.append("se busco un nodo")
-            
-        elif (texto == "compare"):
-            list_historic.append("se busco las replicas de un nodo")
-        elif (texto == "pre_order"):
-            list_historic.append("se mostro el recorrido con pre_order")
-        elif (texto == "in_order"):
-            list_historic.append("se mostro el recorrido con in_order")
-        elif (texto == "post_order"):
-            list_historic.append("se mostro el recorrido con post_order")
-        elif (texto == "breadth_first"):
-            list_historic.append("se mostro el recorrido por niveles")
-            list_historic.pop(-2)
-        elif (texto == "_find_minimum"):
-            list_historic.append("se busco el sismo mas pequeño")
-        elif (texto == "height"):
-            list_historic.append("se mostro la altura")
-        elif (texto == "size"):
-            list_historic.append("se mostro el tamaño")
-        elif (texto == "node_level"):
-            list_historic.append("se mostro el nivel del nodo")
-        elif (texto == "nodes_per_level"):
-            list_historic.append("se mostro los nodos por nivel")
-
-        return list_historic
         

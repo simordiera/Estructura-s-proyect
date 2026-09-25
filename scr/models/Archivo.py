@@ -103,7 +103,9 @@ for event in items:
 print (" ")
 """
 
+
 tree.delete(100)
+
 
 items = tree.breadth_first()
 for event in items:
@@ -113,6 +115,7 @@ print(" ")
 
 
 tree.balance()
+
 
 items = tree.breadth_first()
 for event in items:
@@ -144,7 +147,3 @@ else:
     print("No hay replicas")
 
 
-list_historic=tree.historic()
-for h in list_historic:
-    print(h)
-print (" ")
