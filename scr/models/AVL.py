@@ -222,7 +222,7 @@ class AVL:
 
     def delete(self, id):
     
-        earthquake=self.research(self.root,id)
+        earthquake=self.research(id)
         if (earthquake is None):
             return None
         else:
@@ -461,12 +461,17 @@ class AVL:
     def _historic(self, node, texto, list_historic):
         if (texto == "insert"):
             list_historic.append("se inserto un nodo")
+
         elif (texto == "delete"):
             list_historic.append("se elimino un nodo")
+            list_historic.pop(-2)
+
         elif (texto == "balance"):
             list_historic.append("se balanceo el arbol")
+
         elif (texto == "research"):
             list_historic.append("se busco un nodo")
+            
         elif (texto == "compare"):
             list_historic.append("se busco las replicas de un nodo")
         elif (texto == "pre_order"):
@@ -477,6 +482,7 @@ class AVL:
             list_historic.append("se mostro el recorrido con post_order")
         elif (texto == "breadth_first"):
             list_historic.append("se mostro el recorrido por niveles")
+            list_historic.pop(-2)
         elif (texto == "_find_minimum"):
             list_historic.append("se busco el sismo mas pequeño")
         elif (texto == "height"):

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
+import Event
 
 @dataclass
 class Node:
