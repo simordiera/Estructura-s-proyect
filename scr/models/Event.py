@@ -119,4 +119,4 @@ class Event:
         return (p, M, id)
 
     def __str__(self):
-        return f"({self._priority},{self._magnitude},{self._id})"+str(self.__dict__)+f" {self._review}"
+        return f"({self._priority},{self._magnitude},{self._id})" + str(self.__dict__)
