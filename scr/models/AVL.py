@@ -437,6 +437,18 @@ class AVL:
 
         return list_similitude
 
-    def edit_event():
 
-    #def historic ():
+    """
+    def edit_event(self, id, info_new):
+        earthquake=self.research(id)
+        if earthquake is None:
+            return None
+        self._edit_event(self, earthquake, info_new)
+    
+    def _edit_event (self, earthquake, info_new):
+        earthquakee=earthquake.value
+        earthquake_old=earthquake.value
+
+
+    #def historic ()
+    """
