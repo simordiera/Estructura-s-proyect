@@ -1,14 +1,13 @@
 from datetime import datetime
 class Event:
 
-    def __init__(self, id , magnitude, depth,epicenter, date, review, stations, attention_status):
+    def __init__(self, id , magnitude, depth,epicenter, date, stations, attention_status):
         self.set_id(id)
         self.set_magnitude(magnitude)
         self.set_depth(depth)
         self.set_epicenter(epicenter[0], epicenter[1])
         
         self.set_datetime(date)
-        self.set_review = review
         self.set_stations = stations
         self.set_attention_status = attention_status
 
@@ -77,13 +76,19 @@ class Event:
         if self._epicenter:
             x=self._epicenter[0]
             y=self._epicenter[1]
-            if (0.0<=x<=500.0 and 0.0<=y<=500.0):
-                self._zone="no poblada"
-                return True
-            elif (500.0<x<=1000.0 and 500.0<= y<=1000.0):
-                self._zone="poblada"
-                return True
-        return False
+            distance=1000/10 #10 in x and 10 in y. 1000/10=100, in total is 100 tile
+            populated_area_x=[100,300,600,800,200,500,700,100,200,500,800,200,500,700,900,100,400,700, 0,900]
+            populated_area_y=[0,0,0,100,200,200,300,400,400,400,500,600,600,600,700,800,800,800,900,900]
+
+            for i in range(len(populated_area_x)):
+                if (populated_area_x[i]<=x<=(populated_area_x[i]+distance) and populated_area_y[i]<=y<=populated_area_y[i]+distance):
+                    self._zone="poblada"
+                    return True
+                else:
+                    self._zone="no poblada"
+                    return True 
+                
+        
     def get_zone(self):
         zone=self._zone
         return zone
@@ -114,4 +119,4 @@ class Event:
         return (p, M, id)
 
     def __str__(self):
-        return str(self.__dict__)
+        return f"({self._priority},{self._magnitude},{self._id})"+str(self.__dict__)+f" {self._review}"

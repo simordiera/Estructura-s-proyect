@@ -7,6 +7,7 @@ class AVL:
 
     def __init__(self):
         self.root = None
+        self.list_historic= []
 
 
     def _get_height(self, node: Optional[Node]) -> int:
@@ -93,6 +94,7 @@ class AVL:
             return node
 
         return node
+
         
     def balance (self) -> None:
         self.root = self._balance(self.root)
@@ -101,9 +103,7 @@ class AVL:
         if node is None:
             return None
 
-    
         node.left = self._balance(node.left)
-
         node.right = self._balance(node.right)
 
         
@@ -166,12 +166,12 @@ class AVL:
         items = self._in_order(root.left, items)
         items.append(root.value)
         items = self._in_order(root.right, items)
+
         return items
 
 
 
     def post_order(self) -> None:
-
         if self.root is None:
             return
         items = []
@@ -206,43 +206,44 @@ class AVL:
 
 
     def _find_minimum(self, root: Node) -> Node:
-
         current = root
-
         while current.left is not None:
             current = current.left
-
         return current
 
 
-    def delete(self, value) -> None:
-        self.root = self._delete(self.root, value)
+    def delete(self, id):
+        earthquake=self.research(id)
+        if (earthquake is None):
+            return None
+        else:
+            self.root = self._delete(self.root, earthquake)
+            return earthquake
 
-    def _delete(self, root: Optional[Node], value) -> Optional[Node]:
+    def _delete(self, root: Optional[Node], earthquake ) -> Optional[Node]:
 
         if root is None:
             return None
-        
-        value_key = value.get_code()
+        value_key = earthquake.value.get_code()
         root_key = root.value.get_code()
         
         if value_key[0] != root_key[0]:
             if value_key[0] < root_key[0]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left, earthquake)
             elif value_key[0] > root_key[0]:
-                root.right = self._delete(root.right, value)
+                root.right = self._delete(root.right, earthquake)
 
         elif value_key[1] != root_key[1]:
             if value_key[1] < root_key[1]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left,earthquake )
             elif value_key[1] > root_key[1]:
-                root.right = self._delete(root.right, value)
+                root.right = self._delete(root.right, earthquake)
 
         elif value_key[2] != root_key[2]:
             if value_key[2] < root_key[2]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left, earthquake)
             elif value_key[2] > root_key[2]:
-                root.right = self._delete(root.right, value)
+                root.right = self._delete(root.right, earthquake)
 
         else:
             if root.is_leaf():
@@ -253,11 +254,11 @@ class AVL:
                 return root.left
             successor = self._find_minimum(root.right)
             root.value = successor.value
-            root.right = self._delete(root.right, successor.value)
+            root.right = self._delete(root.right, successor)
+
         return root
         
     def height(self) -> int:
-
         if self.root is None:
             return -1
 
@@ -267,10 +268,8 @@ class AVL:
         self,
         node: Optional[Node]
     ) -> int:
-
         if node is None:
             return -1
-
         return 1 + max(
             self._height(node.left),
             self._height(node.right)
@@ -278,20 +277,17 @@ class AVL:
 
 
     def size(self) -> int:
-
         if self.root is None:
             return 0
-
         return self._size(self.root)
 
     def _size(
         self,
         node: Optional[Node]
     ) -> int:
-
         if node is None:
             return 0
-
+        
         return (
             1
             + self._size(node.left)
@@ -355,7 +351,6 @@ class AVL:
             0,
             counts
         )
-
         return counts
 
     def _nodes_per_level(
@@ -382,15 +377,16 @@ class AVL:
             node.right,
             level + 1,
             counts
-        )
-
-    def research(self, id) -> None:
+        )  
+    
+    def research(self, id,) -> None:
         return  self._research(self.root, id)
     
     def _research(self, node: Optional[Node], id) -> Node:
 
         if node is None:
             return None
+
         value_key = id
         node_key = node.value.get_code()
 
@@ -405,10 +401,8 @@ class AVL:
 
             return self._research(node.right, id)
 
-
-
     def compare(self, id) -> None:
-
+    
         list_similitude=[]
         value_key = self.research(id)
 
@@ -417,6 +411,7 @@ class AVL:
         
         self._compare(self.root, value_key, list_similitude)
         return list_similitude
+
     
     def _compare(self, node: Optional[Node], value_key, list_similitude) -> Node:
 
@@ -442,3 +437,18 @@ class AVL:
 
         return list_similitude
 
+
+    """
+    def edit_event(self, id, info_new):
+        earthquake=self.research(id)
+        if earthquake is None:
+            return None
+        self._edit_event(self, earthquake, info_new)
+    
+    def _edit_event (self, earthquake, info_new):
+        earthquakee=earthquake.value
+        earthquake_old=earthquake.value
+
+
+    #def historic ()
+    """

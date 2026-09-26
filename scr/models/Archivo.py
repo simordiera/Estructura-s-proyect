@@ -23,60 +23,54 @@ event1 = Event(
     "2026-09-18 15:30",
     1,
     {"sta01"},
-    "pending"
 )
 
 event2 = Event(
     200,
-    2.0,
+    4.0,
     20.0,
-    (340.0 , 400.0),
+    (300.0 , 400.0),
     "2026-09-18 16:30",
     1,
     {"sta02"},
-    "pending"
 )
 event3 = Event(
     300,
-    3.0,
+    4.0,
     20.0,
     (300.0 , 400.0),
     "2026-09-18 15:30",
     1,
     {"sta03"},
-    "pending"
 )
 
 event4 = Event(
     400,
-    1.0,
+    4.0,
     20.0,
     (300.0 , 400.0),
     "2026-09-18 15:30",
     1,
     {"sta04"},
-    "pending"
 )
 event5 = Event(
     500,
-    6.0,
+    4.0,
     20.0,
     (300.0 , 400.0),
     "2026-09-18 15:30",
     1,
     {"sta05"},
-    "pending"
 )
 
 event6 = Event(
     600,
-    5.0,
+    4.0,
     20.0,
     (300.0 , 400.0),
     "2026-09-18 15:30",
     1,
     {"sta06"},
-    "pending"
 )
 
 
@@ -103,7 +97,9 @@ for event in items:
 print (" ")
 """
 
-tree.delete(event3)
+
+tree.delete(700)
+
 
 items = tree.breadth_first()
 for event in items:
@@ -113,6 +109,7 @@ print(" ")
 
 
 tree.balance()
+
 
 items = tree.breadth_first()
 for event in items:
@@ -142,3 +139,5 @@ if result1:
         print(f" la replica es: {nodo.value}")
 else:
     print("No hay replicas")
+
+
