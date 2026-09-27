@@ -10,7 +10,7 @@ class Event:
         self.set_datetime(date)
         self.set_stations = stations
 
-        #self.set_review()
+        self.set_review()
         self.set_zone()
         self.set_priority()
 
@@ -120,6 +120,12 @@ class Event:
     def get_station(self):
         station=self._station
         return station
+
+    def review(self, id):
+        if self.research(id):
+            return 1
+        else:
+            return 0
 
     def __str__(self):
         return f"({self._priority},{self._magnitude},{self._id})"+str(self.__dict__)
