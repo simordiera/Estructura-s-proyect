@@ -1,4 +1,6 @@
 import sys
+from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -10,9 +12,9 @@ if str(MODELS_PATH) not in sys.path:
 
 from BST import BST
 from Event import Event
+from UndoStack import UndoStack
 
 
-st.set_page_config(page_title="Visualización BST", page_icon="🌳", layout="wide")
 st.title("Visualización del árbol BST")
 st.caption("Comparación del árbol BST del proyecto SismoLab con la clave (prioridad, magnitud, identificador).")
 
@@ -27,10 +29,11 @@ def create_example_events():
         (600, 2.0, 20.0, (300.0, 400.0), "2026-09-18 15:30", "sta06"),
         (700, 2.0, 20.0, (300.0, 400.0), "2026-09-18 17:30", "sta07"),
         (800, 2.0, 20.0, (300.0, 400.0), "2026-09-18 18:30", "sta08"),
-        (900, 2.0, 20.0, (300.0, 400.0), "2026-09-18 19:30", "sta09"),
+        # Evento reciente de prioridad media para conservar una rama interna elegible.
+        (900, 4.8, 10.0, (300.0, 400.0), "2026-09-25 19:30", "sta09"),
     ]
     return [
-        Event(identifier, magnitude, depth, epicenter, date, 1, {station}, "pending")
+        Event(identifier, magnitude, depth, epicenter, date, {station}, "pending")
         for identifier, magnitude, depth, epicenter, date, station in examples
     ]
 
@@ -119,38 +122,149 @@ def event_rows(tree):
     return rows
 
 
+def create_tree(insertion_order):
+    events = create_example_events()
+    if insertion_order == "Clave ascendente":
+        events.sort(key=lambda event: event.get_code())
+    elif insertion_order == "Clave descendente":
+        events.sort(key=lambda event: event.get_code(), reverse=True)
+
+    tree = BST(
+        simulation_clock=datetime.now(),
+        archive_age_hours=st.session_state.bst_archive_age_hours,
+    )
+    for event in events:
+        tree.insert(event)
+    return tree
+
+
+# El estado se conserva entre reruns para que las acciones sean visibles.
+if "bst_archive_age_hours" not in st.session_state:
+    st.session_state.bst_archive_age_hours = 72
+if "bst_insertion_order" not in st.session_state:
+    st.session_state.bst_insertion_order = "Orden del archivo"
+if "bst_tree" not in st.session_state:
+    st.session_state.bst_tree = create_tree(st.session_state.bst_insertion_order)
+if "bst_undo" not in st.session_state:
+    st.session_state.bst_undo = UndoStack()
+
+
 with st.sidebar:
     st.header("Ejemplo")
     insertion_order = st.selectbox(
         "Orden de insercion",
         ("Orden del archivo", "Clave ascendente", "Clave descendente"),
+        key="bst_insertion_order",
     )
-    st.info("El BST conserva el orden de insercion y no aplica rotaciones ni balanceo AVL.")
+    if st.button("Reconstruir ejemplo"):
+        st.session_state.bst_tree = create_tree(insertion_order)
+        st.session_state.bst_undo = UndoStack()
+        st.rerun()
+    st.session_state.bst_archive_age_hours = st.number_input(
+        "Antigüedad mínima T (horas)", min_value=1, value=72, step=1,
+    )
+    tree = st.session_state.bst_tree
+    tree.set_simulation_clock(datetime.now())
+    tree.set_archive_age_hours(st.session_state.bst_archive_age_hours)
+    archive_candidate = tree.find_archive_candidate()
+    if archive_candidate:
+        st.info(
+            f"Subárbol elegido: raíz SIS-{archive_candidate['root_id']:06d} "
+            f"({archive_candidate['size']} eventos)."
+        )
+    else:
+        st.info("No hay un subárbol elegible para archivar.")
+    if st.button("Archivar subárbol", disabled=archive_candidate is None):
+        operation = tree.archive_subtree(st.session_state.bst_undo)
+        if operation:
+            st.success(
+                f"Se archivaron {len(operation['ids'])} eventos, incluida la raíz "
+                f"SIS-{operation['root_id']:06d}."
+            )
+            st.rerun()
+    if st.button("Deshacer última acción"):
+        if tree.undo_last(st.session_state.bst_undo):
+            st.success("La última acción se deshizo correctamente.")
+            st.rerun()
 
-events = create_example_events()
-if insertion_order == "Clave ascendente":
-    events.sort(key=lambda event: event.get_code())
-elif insertion_order == "Clave descendente":
-    events.sort(key=lambda event: event.get_code(), reverse=True)
+tree = st.session_state.bst_tree
 
-tree = BST()
-for event in events:
-    tree.insert(event)
+# El BST refleja los datos producidos por el AVL, pero conserva su propia
+# topologia: cada alta se inserta como BST y cada baja se elimina como BST.
+avl_state = st.session_state.get("avl_sync_state")
+if avl_state is not None:
+    target_events = {
+        event.get_id(): event for event in avl_state["active_events"]
+    }
+    current_events = {
+        event.get_id(): event for event in (tree.in_order() or [])
+    }
+
+    for event_id in set(current_events) - set(target_events):
+        tree.delete_active(event_id)
+
+    for event_id, target_event in target_events.items():
+        current_event = current_events.get(event_id)
+        if current_event is None:
+            tree.insert(deepcopy(target_event))
+        elif current_event.__dict__ != target_event.__dict__:
+            tree.delete_active(event_id)
+            tree.insert(deepcopy(target_event))
+
+    tree.list_historic = deepcopy(avl_state["historic_events"])
+    tree.retired_ids = set(avl_state["retired_ids"])
+    tree.associations = deepcopy(avl_state["associations"])
+    tree.metrics.restore(avl_state["metrics"])
+    tree.simulation_clock = avl_state["simulation_clock"]
+    tree.archive_age_hours = avl_state["archive_age_hours"]
+events = tree.in_order() or []
 
 st.subheader("Arbol activo")
-st.info("Este arbol muestra la estructura BST sin balanceo, para compararla con el AVL.")
+st.info("Este árbol muestra la estructura BST sin balanceo, para compararla con el AVL.")
 
 left_column, right_column = st.columns([2, 1])
 with left_column:
     st.graphviz_chart(tree_to_dot(tree), use_container_width=True)
 with right_column:
-    st.metric("Eventos activos", len(events))
+    st.metric("Eventos activos", tree.size())
+    st.metric("Eventos históricos", len(tree.list_historic))
     st.metric("Altura", calculated_height(tree.root))
     st.metric("Raiz", f"SIS-{tree.root.value.get_id():06d}" if tree.root else "-")
     st.metric("Hojas", sum(1 for row in event_rows(tree) if row["Altura"] == 0))
 
 st.subheader("Detalle de nodos")
 st.dataframe(event_rows(tree), use_container_width=True, hide_index=True)
+st.caption("Las eliminaciones se realizan desde la página AVL y se reflejan aquí automáticamente.")
+
+st.subheader("Histórico")
+if tree.list_historic:
+    st.dataframe(
+        [
+            {
+                "Identificador": f"SIS-{event.get_id():06d}",
+                "Prioridad": event.get_priority(),
+                "Magnitud": event.get_magnitude(),
+                "Estado": "Archivado",
+            }
+            for event in tree.list_historic
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
+    historic_id = st.selectbox(
+        "Evento histórico para reactivar",
+        [event.get_id() for event in tree.list_historic],
+        key="bst_historic_id",
+    )
+    if st.button("Reactivar evento histórico"):
+        if tree.reactivate_historic(historic_id, st.session_state.bst_undo):
+            st.success(f"SIS-{historic_id:06d} volvió al BST.")
+            st.rerun()
+else:
+    st.info("No hay eventos archivados.")
+
+st.subheader("Métricas")
+st.json(tree.metrics.counters)
 
 st.subheader("Recorridos")
 traversal_columns = st.columns(4)

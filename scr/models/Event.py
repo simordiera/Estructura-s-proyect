@@ -63,7 +63,7 @@ class Event:
         return H
 
     def set_epicenter(self, x, y):
-        if (0.0<=x<=1000.0 and 0.0<=y<=1000.0):
+        if (-180<=x<=180 and -90<=y<=90):
             self._epicenter=(x,y)
             return True
         return False
@@ -94,20 +94,17 @@ class Event:
         return zone
 
     def set_priority(self):
-        if self._magnitude: 
-            M=self._magnitude
-        if self._depth:
-            H=self._depth            
-        if M and H:
-            if self._zone=="poblada" or self._zone=="no poblada":
-                if (M>=6.0):
-                    self._priority=3
-                elif (M>=4.5 and H<=30.0 and self._zone=="poblada"):
-                    self._priority=3
-                elif (M>=4.5):
-                    self._priority=2
-                else:
-                    self._priority=1
+        M=self._magnitude
+        H=self._depth
+        if self._zone=="poblada" or self._zone=="no poblada":
+            if (M>=6.0):
+                self._priority=3
+            elif (M>=4.5 and H<=30.0 and self._zone=="poblada"):
+                self._priority=3
+            elif (M>=4.5):
+                self._priority=2
+            else:
+                self._priority=1
     def get_priority(self):
         priority=self._priority
         return priority
@@ -125,4 +122,4 @@ class Event:
         return station
 
     def __str__(self):
-        return f"({self._priority},{self._magnitude},{self._id})"+str(self.__dict__) #+f" {self._review}"
+        return f"({self._priority},{self._magnitude},{self._id})"+str(self.__dict__)

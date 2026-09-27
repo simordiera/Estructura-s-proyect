@@ -1,11 +1,15 @@
 from collections import deque
+from copy import deepcopy
+from datetime import datetime, timedelta
 from typing import Optional
 from Node import Node
+from Metrics import Metrics
 
 
 class AVL:
 
-    def __init__(self):
+    # Estado del catalogo activo, historico y parametros del escenario.
+    def __init__(self, simulation_clock=None, archive_age_hours=72, stress_mode=False):
         self.root = None
         self.list_deleted=[]
 
@@ -71,36 +75,207 @@ class AVL:
             return Node(value)
         value_key = value.get_code()
         node_key = node.value.get_code()
-        
-        if value_key[0] != node_key[0]:
-            if value_key[0] < node_key[0]:
-                node.left = self._insert(node.left, value)
 
-            elif value_key[0] > node_key[0]:
-                node.right = self._insert(node.right, value)
-
-        elif value_key[1] != node_key[1]:
-            if value_key[1] < node_key[1]:
-                node.left = self._insert(node.left, value)
-
-            elif value_key[1] > node_key[1]:
-                node.right = self._insert(node.right, value)
-
-        elif value_key[2] != node_key[2]:
-            if value_key[2] < node_key[2]:
-                node.left = self._insert(node.left, value)
-
-            elif value_key[2] > node_key[2]:
-                node.right = self._insert(node.right, value)
-
-        else:
+        if value_key == node_key:
             return node
+
+        # Insercion lexicografica por prioridad, magnitud e identificador.
+        if value_key < node_key:
+            node.left = self._insert(node.left, value)
+        else:
+            node.right = self._insert(node.right, value)
+
+        self._update_height(node)
+        if self.stress_mode:
+            return node
+
+        # Rotaciones AVL durante el retorno de la recursion.
+        balance = self._balance_factor(node)
+        if balance > 1:
+            if value_key < node.left.value.get_code():
+                return self._rotate_right(node)
+            node.left = self._rotate_left(node.left)
+            return self._rotate_right(node)
+        if balance < -1:
+            if value_key > node.right.value.get_code():
+                return self._rotate_left(node)
+            node.right = self._rotate_right(node.right)
+            return self._rotate_left(node)
 
         return node
 
         
     def balance (self) -> None:
         self.root = self._balance(self.root)
+
+    # Configuracion del reloj y del modo de ejecucion.
+    def set_simulation_clock(self, simulation_clock):
+        self.simulation_clock = simulation_clock
+
+    def set_archive_age_hours(self, archive_age_hours):
+        if archive_age_hours <= 0:
+            raise ValueError("T debe ser mayor que cero")
+        self.archive_age_hours = archive_age_hours
+
+    # Recorridos auxiliares para seleccionar y congelar un subarbol.
+    def _subtree_nodes(self, node):
+        if node is None:
+            return []
+        return [node] + self._subtree_nodes(node.left) + self._subtree_nodes(node.right)
+
+    def _archive_candidate(self, node, depth):
+        if node is None:
+            return None
+
+        nodes = self._subtree_nodes(node)
+        limit = self.simulation_clock - timedelta(hours=self.archive_age_hours)
+        eligible = all(
+            event.get_priority() == 1 and event.get_datetime() < limit
+            for event in (candidate.value for candidate in nodes)
+        )
+        candidates = []
+        if eligible:
+            candidates.append((len(nodes), depth, node.value.get_id(), nodes))
+
+        left_candidate = self._archive_candidate(node.left, depth + 1)
+        right_candidate = self._archive_candidate(node.right, depth + 1)
+        if left_candidate is not None:
+            candidates.append(left_candidate)
+        if right_candidate is not None:
+            candidates.append(right_candidate)
+        return max(candidates, key=lambda item: (item[0], item[1], item[2])) if candidates else None
+
+    def find_archive_candidate(self):
+        """Devuelve la seleccion automatica sin modificar el AVL."""
+        candidate = self._archive_candidate(self.root, 0)
+        if candidate is None:
+            return None
+        size, depth, root_id, nodes = candidate
+        return {
+            "root_id": root_id,
+            "depth": depth,
+            "size": size,
+            "ids": {node.value.get_id() for node in nodes},
+            "root_event": nodes[0].value,
+            "events": [node.value for node in nodes],
+        }
+
+    # Copia completa del estado para que archivar sea una sola accion de undo.
+    def _archive_snapshot(self):
+        return {
+            "root": deepcopy(self.root),
+            "historic": deepcopy(self.list_historic),
+            "retired_ids": deepcopy(self.retired_ids),
+            "associations": deepcopy(self.associations),
+            "metrics": self.metrics.snapshot(),
+            "simulation_clock": self.simulation_clock,
+            "archive_age_hours": self.archive_age_hours,
+            "stress_mode": self.stress_mode,
+        }
+
+    def _restore_archive_snapshot(self, snapshot):
+        self.root = deepcopy(snapshot["root"])
+        self.list_historic = deepcopy(snapshot["historic"])
+        self.retired_ids = deepcopy(snapshot["retired_ids"])
+        self.associations = deepcopy(snapshot["associations"])
+        self.metrics.restore(snapshot["metrics"])
+        self.simulation_clock = snapshot["simulation_clock"]
+        self.archive_age_hours = snapshot["archive_age_hours"]
+        self.stress_mode = snapshot["stress_mode"]
+
+    def archive_subtree(self, undo_stack=None):
+        """Traslada el subarbol elegible mas grande al historico."""
+        candidate = self.find_archive_candidate()
+        if candidate is None:
+            return None
+
+        # Este conjunto se congela antes de tocar el AVL.
+        frozen_ids = set(candidate["ids"])
+        root_id = candidate["root_id"]
+        if root_id not in frozen_ids:
+            raise RuntimeError("La raiz seleccionada debe pertenecer al subarbol archivado")
+        snapshot = self._archive_snapshot()
+        archived_events = list(candidate["events"])
+
+        for event_id in frozen_ids:
+            self.delete(event_id)
+        if not self.stress_mode:
+            self.balance()
+
+        self.list_historic.extend(archived_events)
+        self.metrics.increment("mass_archives")
+        self.metrics.increment("archived_events", len(archived_events))
+
+        operation = {
+            "type": "archivar_subarbol",
+            "ids": frozen_ids,
+            "root_id": root_id,
+            "snapshot": snapshot,
+        }
+        if undo_stack is not None:
+            undo_stack.push_undo(operation)
+        return operation
+
+    def undo_archive(self, undo_stack):
+        """Deshace la ultima accion de archivado como una unidad."""
+        operation = undo_stack.peek_undo()
+        if not operation or operation.get("type") != "archivar_subarbol":
+            return False
+        undo_stack.pop_undo()
+        self._restore_archive_snapshot(operation["snapshot"])
+        return True
+
+    # Reactivacion de un evento historico mediante su identidad.
+    def reactivate_historic(self, event_id, undo_stack=None):
+        if self.research(event_id) is not None:
+            return None
+        historic_index = next(
+            (index for index, event in enumerate(self.list_historic)
+             if event.get_id() == event_id),
+            None,
+        )
+        if historic_index is None:
+            return None
+
+        snapshot = self._archive_snapshot()
+        event = self.list_historic.pop(historic_index)
+        self.insert(event)
+        if not self.stress_mode:
+            self.balance()
+        self.metrics.increment("reactivated_events")
+        operation = {
+            "type": "reactivar_historico",
+            "event_id": event_id,
+            "snapshot": snapshot,
+        }
+        if undo_stack is not None:
+            undo_stack.push_undo(operation)
+        return operation
+
+    def undo_last(self, undo_stack):
+        """Restaura la ultima operacion compatible registrada en la pila."""
+        operation = undo_stack.peek_undo()
+        if not operation or "snapshot" not in operation:
+            return False
+        undo_stack.pop_undo()
+        self._restore_archive_snapshot(operation["snapshot"])
+        return True
+
+    def delete_active(self, event_id, undo_stack=None):
+        """Elimina un solo evento, sin enviarlo al historico."""
+        if self.research(event_id) is None:
+            return None
+        snapshot = self._archive_snapshot()
+        deleted_event = self.delete(event_id)
+        self.retired_ids.add(event_id)
+        operation = {
+            "type": "eliminar_evento",
+            "event_id": event_id,
+            "snapshot": snapshot,
+        }
+        if undo_stack is not None:
+            undo_stack.push_undo(operation)
+        return deleted_event
 
     def _balance(self, node: Optional[Node]) -> Node:
         if node is None:
@@ -260,6 +435,7 @@ class AVL:
             root.value = successor.value
             root.right = self._delete(root.right, successor)
 
+        self._update_height(root)
         return root
         
     def height(self) -> int:
@@ -494,3 +670,9 @@ class AVL:
 
     #def historic ()
     """
+
+    def review(self, id):
+        if self.research(id):
+            return 1
+        else:
+            return 0
