@@ -21,7 +21,6 @@ event1 = Event(
     20.0,
     (50.0 , 40.0),
     "2026-09-18 15:30",
-    1,
     {"sta01"},
 )
 
@@ -31,16 +30,14 @@ event2 = Event(
     20.0,
     (30.0 , 40.0),
     "2026-09-18 16:30",
-    1,
     {"sta02"},
 )
 event3 = Event(
     300,
-    4.0,
+    4.5,
     20.0,
     (30.0 , 40.0),
     "2026-09-18 15:30",
-    1,
     {"sta03"},
 )
 
@@ -50,7 +47,6 @@ event4 = Event(
     20.0,
     (30.0 , 40.0),
     "2026-09-18 15:30",
-    1,
     {"sta04"},
 )
 event5 = Event(
@@ -59,7 +55,6 @@ event5 = Event(
     20.0,
     (30.0 , 40.0),
     "2026-09-18 15:30",
-    1,
     {"sta05"},
 )
 
@@ -69,7 +64,6 @@ event6 = Event(
     20.0,
     (30.0 , 40.0),
     "2026-09-18 15:30",
-    1,
     {"sta06"},
 )
 
@@ -77,6 +71,8 @@ event6 = Event(
 tree = AVL()
 tree.insert(event1)
 tree.insert(event2)
+tree.insert(event3)
+tree.delete(300)
 tree.insert(event3)
 tree.insert(event4)
 tree.insert(event5)
@@ -89,16 +85,16 @@ for event in items:
 
 print(" ")
 
-tree.balance()
+tree.delete(400)
+
 
 items = tree.breadth_first()
 for event in items:
     print(event)
-print (" ")
+
+print(" ")
+
 """
-
-
-tree.delete(700)
 
 
 items = tree.breadth_first()
@@ -114,9 +110,24 @@ tree.balance()
 items = tree.breadth_first()
 for event in items:
     print(event)
+
 print (" ")
 
+tree.data_correction(500, {"magnitud": (4.5)}) #correccion de un sismo
 
+items = tree.breadth_first()
+for event in items:
+    print(event)
+
+print (" ")
+
+tree.balance()
+
+items = tree.breadth_first()
+for event in items:
+    print(event)
+
+print (" ")
 
 
 #nuevas 2 funciones:
