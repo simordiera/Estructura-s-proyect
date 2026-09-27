@@ -2,14 +2,14 @@ from collections import deque
 from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Optional
-from Node import Node
-from Metrics import Metrics
+from scr.models.Node import Node
+from scr.models.Metrics import Metrics
 
 
 class AVL:
 
     # Estado del catalogo activo, historico y parametros del escenario.
-    def __init__(self, simulation_clock=None, archive_age_hours=72, stress_mode=False):
+    def __init__(self):
         self.root = None
         self.list_deleted=[]
 
@@ -86,8 +86,6 @@ class AVL:
             node.right = self._insert(node.right, value)
 
         self._update_height(node)
-        if self.stress_mode:
-            return node
 
         # Rotaciones AVL durante el retorno de la recursion.
         balance = self._balance_factor(node)
