@@ -14,8 +14,6 @@ from AVL import AVL
 from Event import Event
 from UndoStack import UndoStack
 
-
-st.set_page_config(page_title="Visualización AVL", page_icon="🌐", layout="wide")
 st.title("Visualización del árbol AVL")
 st.caption("Ejemplos del proyecto SismoLab ordenados por la clave (prioridad, magnitud, identificador).")
 

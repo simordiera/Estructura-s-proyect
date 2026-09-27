@@ -636,3 +636,9 @@ class AVL:
 
     #def historic ()
     """
+
+    def review(self, id):
+        if self.research(id):
+            return 1
+        else:
+            return 0

@@ -1,0 +1,57 @@
+[
+    {
+        "identificador": 1,
+        "magnitud": -2.0,
+        "coordenadas": [
+            0.0,
+            0.0
+        ],
+        "fecha": "2026-09-26",
+        "hora": "22:00:00",
+        "lugar_reporte": ""
+    },
+    {
+        "identificador": 4,
+        "magnitud": -2.0,
+        "coordenadas": [
+            0.0,
+            0.0
+        ],
+        "fecha": "2026-09-26",
+        "hora": "22:03:00",
+        "lugar_reporte": ""
+    },
+    {
+        "identificador": 6,
+        "magnitud": -2.0,
+        "coordenadas": [
+            0.0,
+            0.0
+        ],
+        "fecha": "2026-09-26",
+        "hora": "22:05:00",
+        "lugar_reporte": ""
+    },
+    {
+        "identificador": 523,
+        "magnitud": 5.0,
+        "coordenadas": [
+            23.0,
+            252.0
+        ],
+        "fecha": "2026-09-26",
+        "hora": "22:28:00",
+        "lugar_reporte": "Manizales"
+    },
+    {
+        "identificador": 70,
+        "magnitud": -2.0,
+        "coordenadas": [
+            -70,
+            -90
+        ],
+        "fecha": "2026-09-26",
+        "hora": "22:53:00",
+        "lugar_reporte": "colombia"
+    }
+]

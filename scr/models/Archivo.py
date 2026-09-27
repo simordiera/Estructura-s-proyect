@@ -1,8 +1,8 @@
 import json
-from Node import Node
-from AVL import AVL
+from scr.models.Node import Node
+from scr.models.AVL import AVL
 from typing import Optional
-from Event import Event
+from scr.models.Event import Event
 
 
 
@@ -19,7 +19,7 @@ event1 = Event(
     100,
     4.0,
     20.0,
-    (300.0 , 400.0),
+    (50.0 , 40.0),
     "2026-09-18 15:30",
     1,
     {"sta01"},
@@ -29,7 +29,7 @@ event2 = Event(
     200,
     4.0,
     20.0,
-    (300.0 , 400.0),
+    (30.0 , 40.0),
     "2026-09-18 16:30",
     1,
     {"sta02"},
@@ -38,7 +38,7 @@ event3 = Event(
     300,
     4.0,
     20.0,
-    (300.0 , 400.0),
+    (30.0 , 40.0),
     "2026-09-18 15:30",
     1,
     {"sta03"},
@@ -48,7 +48,7 @@ event4 = Event(
     400,
     4.0,
     20.0,
-    (300.0 , 400.0),
+    (30.0 , 40.0),
     "2026-09-18 15:30",
     1,
     {"sta04"},
@@ -57,7 +57,7 @@ event5 = Event(
     500,
     4.0,
     20.0,
-    (300.0 , 400.0),
+    (30.0 , 40.0),
     "2026-09-18 15:30",
     1,
     {"sta05"},
@@ -67,7 +67,7 @@ event6 = Event(
     600,
     4.0,
     20.0,
-    (300.0 , 400.0),
+    (30.0 , 40.0),
     "2026-09-18 15:30",
     1,
     {"sta06"},
@@ -141,3 +141,10 @@ else:
     print("No hay replicas")
 
 
+def guardar_json(data, nombre="datos.json"):
+    with open(nombre, "w", encoding="utf-8") as archivo:
+        json.dump(data, archivo, indent=4, ensure_ascii=False)
+
+def cargar_json(nombre="datos.json"):
+    with open(nombre, "r", encoding="utf-8") as archivo:
+        return json.load(archivo)
