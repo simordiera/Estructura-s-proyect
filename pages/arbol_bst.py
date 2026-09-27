@@ -12,7 +12,6 @@ from BST import BST
 from Event import Event
 
 
-st.set_page_config(page_title="Visualización BST", page_icon="🌳", layout="wide")
 st.title("Visualización del árbol BST")
 st.caption("Comparación del árbol BST del proyecto SismoLab con la clave (prioridad, magnitud, identificador).")
 
