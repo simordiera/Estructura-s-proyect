@@ -6,55 +6,47 @@ from Node import Node
 class BST:
     def __init__(self):
         self.root = None
+        self.list_deleted=[]
 
-    def insert(self, value: tuple):
-        if self.root is None:
-            self.root = Node(value)
-        else:
-            self._insert(self.root, value)
+    def insert(self, value) -> None:
+        for i in range (len(self.list_deleted)):
+            if (self.list_deleted[i]== value.get_id()):
+                return None
+        self.root = self._insert(self.root, value)
 
-    def _insert(self, node: Node, value):
+    def _insert(self, node: Optional[Node], value) -> Node:
+
         if node is None:
             return Node(value)
-
         value_key = value.get_code()
         node_key = node.value.get_code()
-
+        
         if value_key[0] != node_key[0]:
             if value_key[0] < node_key[0]:
-                if node.left is None:
-                    node.left = Node(value)
-                else:
-                    self._insert(node.left, value)
+                node.left = self._insert(node.left, value)
+
             elif value_key[0] > node_key[0]:
-                if node.right is None:
-                    node.right = Node(value)
-                else:
-                    self._insert(node.right, value)
+                node.right = self._insert(node.right, value)
+
         elif value_key[1] != node_key[1]:
             if value_key[1] < node_key[1]:
-                if node.left is None:
-                    node.left = Node(value)
-                else:
-                    self._insert(node.left, value)
-            elif value_key[1] > node_key[1]:
-                if node.right is None:
-                    node.right = Node(value)
-                else:
-                    self._insert(node.right, value)
-        else:
-            if value_key[2] < node_key[2]:
-                if node.left is None:
-                    node.left = Node(value)
-                else:
-                    self._insert(node.left, value)
-            elif value_key[2] > node_key[2]:
-                if node.right is None:
-                    node.right = Node(value)
-                else:
-                    self._insert(node.right, value)
+                node.left = self._insert(node.left, value)
 
-            
+            elif value_key[1] > node_key[1]:
+                node.right = self._insert(node.right, value)
+
+        elif value_key[2] != node_key[2]:
+            if value_key[2] < node_key[2]:
+                node.left = self._insert(node.left, value)
+
+            elif value_key[2] > node_key[2]:
+                node.right = self._insert(node.right, value)
+
+        else:
+            return node
+
+        return node
+        
 
     def pre_order(self) -> None:
         if self.root is None:
@@ -125,37 +117,64 @@ class BST:
         print(" ")
         return current
 
-    def delete(self, value: tuple) -> None:
-        self.root = self._delete(self.root, value)
 
-    def _delete(self, root: Optional[Node], value) -> Optional[Node]:
-        if root is None:
+    def research(self, id,) -> None:
+        return  self._research(self.root, id)
+    
+    def _research(self, node: Optional[Node], id) -> Node:
+
+        if node is None:
             return None
 
-        value_key = value.get_code()
-        root_key = root.value.get_code()
+        value_key = id
+        node_key = node.value.get_code()
 
+        if value_key == node_key[2]:
+            return node
+
+        else:
+            result = self._research(node.left, id)
+
+            if result is not None:
+                return result
+
+            return self._research(node.right, id)
+
+    def delete(self, id):
+        earthquake=self.research(id)
+        if (earthquake is None):
+            return None
+        else:
+            self.root = self._delete(self.root, earthquake, self.list_deleted)
+            return earthquake
+
+    def _delete(self, root: Optional[Node], earthquake, list_deleted ) -> Optional[Node]:
+
+        if root is None:
+            return None
+        value_key = earthquake.value.get_code()
+        root_key = root.value.get_code()
+        
         if value_key[0] != root_key[0]:
             if value_key[0] < root_key[0]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left, earthquake, list_deleted)
             elif value_key[0] > root_key[0]:
-                root.right = self._delete(root.right, value)
-
+                root.right = self._delete(root.right, earthquake, list_deleted)
 
         elif value_key[1] != root_key[1]:
             if value_key[1] < root_key[1]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left,earthquake, list_deleted )
             elif value_key[1] > root_key[1]:
-                root.right = self._delete(root.right, value)
-
+                root.right = self._delete(root.right, earthquake, list_deleted)
 
         elif value_key[2] != root_key[2]:
             if value_key[2] < root_key[2]:
-                root.left = self._delete(root.left, value)
+                root.left = self._delete(root.left, earthquake, list_deleted)
             elif value_key[2] > root_key[2]:
-                root.right = self._delete(root.right, value)
+                root.right = self._delete(root.right, earthquake, list_deleted)
 
         else:
+            list_deleted.append(earthquake.value.get_id())
             if root.is_leaf():
                 return None
             if root.left is None:
@@ -164,10 +183,9 @@ class BST:
                 return root.left
             successor = self._find_minimum(root.right)
             root.value = successor.value
-            root.right = self._delete(root.right, successor.value)
+            root.right = self._delete(root.right, successor)
+
         return root
-        
-                        
                 
 
     def height(self) -> int:

@@ -1,6 +1,7 @@
 import json
 from Node import Node
 from AVL import AVL
+from BST import BST
 from typing import Optional
 from Event import Event
 
@@ -17,49 +18,44 @@ def load_earthquakes():
 
 event1 = Event(
     100,
-    4.0,
-    20.0,
-    (300.0 , 400.0),
+    3.2,
+    50.0,
+    (50.0 , 50.0),
     "2026-09-18 15:30",
-    1,
     {"sta01"},
 )
 
 event2 = Event(
     200,
-    4.0,
-    20.0,
-    (300.0 , 400.0),
+    4.5,
+    50.0,
+    (450.0 , 450.0),
     "2026-09-18 16:30",
-    1,
     {"sta02"},
 )
 event3 = Event(
     300,
-    4.0,
+    4.5,
     20.0,
-    (300.0 , 400.0),
+    (50.0 , 950.0),
     "2026-09-18 15:30",
-    1,
     {"sta03"},
 )
 
 event4 = Event(
     400,
     4.0,
-    20.0,
-    (300.0 , 400.0),
+    5.5,
+    (350.0 , 350.0),
     "2026-09-18 15:30",
-    1,
     {"sta04"},
 )
 event5 = Event(
     500,
-    4.0,
-    20.0,
-    (300.0 , 400.0),
+    6.0,
+    50.0,
+    (950.0 , 50.0),
     "2026-09-18 15:30",
-    1,
     {"sta05"},
 )
 
@@ -67,9 +63,8 @@ event6 = Event(
     600,
     4.0,
     20.0,
-    (300.0 , 400.0),
+    (150.0 , 0.0),
     "2026-09-18 15:30",
-    1,
     {"sta06"},
 )
 
@@ -77,6 +72,8 @@ event6 = Event(
 tree = AVL()
 tree.insert(event1)
 tree.insert(event2)
+tree.insert(event3)
+tree.delete(300)
 tree.insert(event3)
 tree.insert(event4)
 tree.insert(event5)
@@ -89,16 +86,16 @@ for event in items:
 
 print(" ")
 
-tree.balance()
+tree.delete(400)
+
 
 items = tree.breadth_first()
 for event in items:
     print(event)
-print (" ")
+
+print(" ")
+
 """
-
-
-tree.delete(700)
 
 
 items = tree.breadth_first()
@@ -114,9 +111,24 @@ tree.balance()
 items = tree.breadth_first()
 for event in items:
     print(event)
+
 print (" ")
 
+tree.data_correction(500, {"magnitud": (4.5)}) #correccion de un sismo
 
+items = tree.breadth_first()
+for event in items:
+    print(event)
+
+print (" ")
+
+tree.balance()
+
+items = tree.breadth_first()
+for event in items:
+    print(event)
+
+print (" ")
 
 
 #nuevas 2 funciones:
@@ -139,5 +151,4 @@ if result1:
         print(f" la replica es: {nodo.value}")
 else:
     print("No hay replicas")
-
 

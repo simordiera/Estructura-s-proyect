@@ -1,7 +1,7 @@
 from datetime import datetime
 class Event:
 
-    def __init__(self, id , magnitude, depth,epicenter, date, stations, attention_status):
+    def __init__(self, id , magnitude, depth, epicenter, date, stations):
         self.set_id(id)
         self.set_magnitude(magnitude)
         self.set_depth(depth)
@@ -9,12 +9,12 @@ class Event:
         
         self.set_datetime(date)
         self.set_stations = stations
-        self.set_attention_status = attention_status
 
+        #self.set_review()
         self.set_zone()
         self.set_priority()
 
-    #def set_review (self, revised):
+    #def set_review (self):
     
 
     def set_datetime(self, date):
@@ -84,9 +84,9 @@ class Event:
                 if (populated_area_x[i]<=x<=(populated_area_x[i]+distance) and populated_area_y[i]<=y<=populated_area_y[i]+distance):
                     self._zone="poblada"
                     return True
-                else:
-                    self._zone="no poblada"
-                    return True 
+            
+            self._zone="no poblada"
+            return True 
                 
         
     def get_zone(self):
@@ -118,5 +118,11 @@ class Event:
         id=self._id
         return (p, M, id)
 
+    def station(self, station):
+        self._station=station
+    def get_station(self):
+        station=self._station
+        return station
+
     def __str__(self):
-        return f"({self._priority},{self._magnitude},{self._id})"+str(self.__dict__)+f" {self._review}"
+        return f"({self._priority},{self._magnitude},{self._id})"+str(self.__dict__) #+f" {self._review}"
