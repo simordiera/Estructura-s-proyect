@@ -10,7 +10,6 @@ class Event:
         self.set_datetime(date)
         self.set_stations = stations
 
-        self.set_review()
         self.set_zone()
         self.set_priority()
 
@@ -30,6 +29,10 @@ class Event:
 
     def get_datetime(self):
         return self.datetime
+
+    def set_review(self):
+        self._reviewed = False
+        return True
 
         
     def set_id (self, id):

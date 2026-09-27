@@ -1,13 +1,31 @@
 from collections import deque
+from datetime import datetime
 from typing import Optional
 from scr.models.Node import Node
+from scr.models.Metrics import Metrics
 
 
 class AVL:
 
-    def __init__(self):
+    def __init__(self, simulation_clock=None, archive_age_hours=72, stress_mode=False):
         self.root = None
         self.list_deleted=[]
+        self.list_historic = []
+        self.retired_ids = set()
+        self.associations = {}
+        self.metrics = Metrics()
+        self.simulation_clock = simulation_clock or datetime.now()
+        self.archive_age_hours = archive_age_hours
+        self.stress_mode = stress_mode
+
+    def set_simulation_clock(self, simulation_clock):
+        self.simulation_clock = simulation_clock
+
+    def set_archive_age_hours(self, archive_age_hours):
+        self.archive_age_hours = archive_age_hours
+
+    def find_archive_candidate(self):
+        return None
 
 
     def _get_height(self, node: Optional[Node]) -> int:

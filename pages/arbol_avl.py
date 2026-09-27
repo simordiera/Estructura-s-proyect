@@ -1,18 +1,12 @@
-import sys
 from copy import deepcopy
 from datetime import datetime
-from pathlib import Path
 
 import streamlit as st
 
-
-MODELS_PATH = Path(__file__).resolve().parents[1] / "scr" / "models"
-if str(MODELS_PATH) not in sys.path:
-    sys.path.insert(0, str(MODELS_PATH))
-
-from AVL import AVL
-from Event import Event
-from UndoStack import UndoStack
+from scr.models.AVL import AVL
+from scr.models.Event import Event
+from scr.models.SubtreeArchive import SubtreeArchiveManager
+from scr.models.UndoStack import UndoStack
 
 st.title("Visualización del árbol AVL")
 st.caption("Ejemplos del proyecto SismoLab ordenados por la clave (prioridad, magnitud, identificador).")
@@ -20,19 +14,18 @@ st.caption("Ejemplos del proyecto SismoLab ordenados por la clave (prioridad, ma
 
 def create_example_events():
     examples = [
-        (100, 2.0, 20.0, (300.0, 400.0), "2026-09-18 15:30", "sta01"),
-        (200, 2.0, 20.0, (340.0, 400.0), "2026-09-18 16:30", "sta02"),
-        (300, 2.0, 20.0, (300.0, 400.0), "2026-09-18 15:30", "sta03"),
-        (400, 2.0, 20.0, (300.0, 400.0), "2026-09-18 15:30", "sta04"),
-        (500, 2.0, 20.0, (300.0, 400.0), "2026-09-18 15:30", "sta05"),
-        (600, 2.0, 20.0, (300.0, 400.0), "2026-09-18 15:30", "sta06"),
-        (700, 2.0, 30.0, (300.0, 400.0), "2026-09-18 17:30", "sta07"),
-        (800, 2.0, 45.0, (300.0, 400.0), "2026-09-18 18:30", "sta08"),
-        # Este evento reciente y de prioridad 2 impide archivar la raiz global.
-        (900, 4.8, 10.0, (300.0, 400.0), "2026-09-25 19:30", "sta09"),
+        (100, 2.0, 20.0, (30.0, 40.0), "2026-09-18 15:30", "sta01"),
+        (200, 2.0, 20.0, (34.0, 40.0), "2026-09-18 16:30", "sta02"),
+        (300, 2.0, 20.0, (30.0, 40.0), "2026-09-18 15:30", "sta03"),
+        (400, 2.0, 20.0, (30.0, 40.0), "2026-09-18 15:30", "sta04"),
+        (500, 2.0, 20.0, (30.0, 40.0), "2026-09-18 15:30", "sta05"),
+        (600, 2.0, 20.0, (30.0, 40.0), "2026-09-18 15:30", "sta06"),
+        (700, 2.0, 30.0, (30.0, 40.0), "2026-09-18 17:30", "sta07"),
+        (800, 2.0, 45.0, (30.0, 40.0), "2026-09-18 18:30", "sta08"),
+        (900, 4.8, 10.0, (30.0, 40.0), "2026-09-25 19:30", "sta09"),
     ]
     return [
-        Event(identifier, magnitude, depth, epicenter, date, {station}, "pending")
+        Event(identifier, magnitude, depth, epicenter, date, {station})
         for identifier, magnitude, depth, epicenter, date, station in examples
     ]
 
@@ -126,11 +119,7 @@ def format_events(events):
 
 
 def create_tree():
-    tree = AVL(
-        simulation_clock=datetime.now(),
-        archive_age_hours=st.session_state.archive_age_hours,
-        stress_mode=st.session_state.stress_mode,
-    )
+    tree = AVL()
     for event in create_example_events():
         tree.insert(event)
     if not tree.stress_mode:
@@ -145,6 +134,8 @@ if "stress_mode" not in st.session_state:
     st.session_state.stress_mode = False
 if "avl_tree" not in st.session_state:
     st.session_state.avl_tree = create_tree()
+if "avl_archiver" not in st.session_state:
+    st.session_state.avl_archiver = SubtreeArchiveManager(st.session_state.avl_tree)
 if "avl_undo" not in st.session_state:
     st.session_state.avl_undo = UndoStack()
 if "avl_deleted_ids" not in st.session_state:
@@ -167,7 +158,7 @@ with st.sidebar:
     st.session_state.avl_tree.set_simulation_clock(datetime.now())
     st.session_state.avl_tree.set_archive_age_hours(st.session_state.archive_age_hours)
     st.session_state.avl_tree.stress_mode = st.session_state.stress_mode
-    archive_candidate = st.session_state.avl_tree.find_archive_candidate()
+    archive_candidate = st.session_state.avl_archiver.find_candidate()
     if archive_candidate:
         st.info(
             f"Subárbol elegido automáticamente: raíz SIS-{archive_candidate['root_id']:06d} "
@@ -176,7 +167,9 @@ with st.sidebar:
     else:
         st.info("No hay un subárbol elegible para archivar.")
     if st.button("Archivar subárbol", disabled=archive_candidate is None):
-        operation = st.session_state.avl_tree.archive_subtree(st.session_state.avl_undo)
+        operation = st.session_state.avl_archiver.archive_subtree(
+            st.session_state.avl_undo
+        )
         if operation:
             st.success(
                 f"Se archivaron {len(operation['ids'])} eventos: "
@@ -185,7 +178,7 @@ with st.sidebar:
             st.rerun()
     if st.button("Deshacer última acción"):
         last_operation = st.session_state.avl_undo.peek_undo()
-        if st.session_state.avl_tree.undo_last(st.session_state.avl_undo):
+        if st.session_state.avl_archiver.undo_last(st.session_state.avl_undo):
             if last_operation and last_operation.get("type") == "eliminar_evento":
                 restored_id = last_operation["event_id"]
                 st.session_state.avl_deleted_ids.discard(restored_id)

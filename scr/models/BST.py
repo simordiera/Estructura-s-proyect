@@ -1,12 +1,19 @@
 from collections import deque
 from typing import Optional
-from Node import Node
+from scr.models.Node import Node
+from scr.models.Metrics import Metrics
 
 
 class BST:
     def __init__(self):
         self.root = None
         self.list_deleted=[]
+        self.list_historic = []
+        self.retired_ids = set()
+        self.associations = {}
+        self.metrics = Metrics()
+        self.simulation_clock = None
+        self.archive_age_hours = 72
 
     def insert(self, value) -> None:
         for i in range (len(self.list_deleted)):
