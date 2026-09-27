@@ -1,14 +1,10 @@
 from collections import deque
-from copy import deepcopy
-from datetime import datetime, timedelta
 from typing import Optional
 from Node import Node
-from Metrics import Metrics
 
 
 class BST:
-    # El BST comparte el estado del escenario, pero nunca aplica rotaciones.
-    def __init__(self, simulation_clock=None, archive_age_hours=72):
+    def __init__(self):
         self.root = None
         self.list_deleted=[]
 
@@ -206,18 +202,6 @@ class BST:
         if self.root is None:
             return 0
         return self._size(self.root)
-
-    def research(self, event_id):
-        """Busca un evento por ID sin confundirlo con la clave completa."""
-        return self._research(self.root, event_id)
-
-    def _research(self, node, event_id):
-        if node is None:
-            return None
-        if node.value.get_id() == event_id:
-            return node
-        found = self._research(node.left, event_id)
-        return found if found is not None else self._research(node.right, event_id)
 
     def _size(self, node: Optional[Node]) -> int:
         if node is None:
