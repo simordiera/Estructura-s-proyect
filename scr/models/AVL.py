@@ -1,13 +1,31 @@
 from collections import deque
+from datetime import datetime
 from typing import Optional
 from scr.models.Node import Node
+from scr.models.Metrics import Metrics
 
 
 class AVL:
 
-    def __init__(self):
+    def __init__(self, simulation_clock=None, archive_age_hours=72, stress_mode=False):
         self.root = None
-        self.list_historic= []
+        self.list_deleted=[]
+        self.list_historic = []
+        self.retired_ids = set()
+        self.associations = {}
+        self.metrics = Metrics()
+        self.simulation_clock = simulation_clock or datetime.now()
+        self.archive_age_hours = archive_age_hours
+        self.stress_mode = stress_mode
+
+    def set_simulation_clock(self, simulation_clock):
+        self.simulation_clock = simulation_clock
+
+    def set_archive_age_hours(self, archive_age_hours):
+        self.archive_age_hours = archive_age_hours
+
+    def find_archive_candidate(self):
+        return None
 
 
     def _get_height(self, node: Optional[Node]) -> int:
@@ -60,6 +78,9 @@ class AVL:
 
 
     def insert(self, value) -> None:
+        for i in range (len(self.list_deleted)):
+            if (self.list_deleted[i]== value.get_id()):
+                return None
         self.root = self._insert(self.root, value)
 
     def _insert(self, node: Optional[Node], value) -> Node:
@@ -217,10 +238,10 @@ class AVL:
         if (earthquake is None):
             return None
         else:
-            self.root = self._delete(self.root, earthquake)
+            self.root = self._delete(self.root, earthquake, self.list_deleted)
             return earthquake
 
-    def _delete(self, root: Optional[Node], earthquake ) -> Optional[Node]:
+    def _delete(self, root: Optional[Node], earthquake, list_deleted ) -> Optional[Node]:
 
         if root is None:
             return None
@@ -229,23 +250,24 @@ class AVL:
         
         if value_key[0] != root_key[0]:
             if value_key[0] < root_key[0]:
-                root.left = self._delete(root.left, earthquake)
+                root.left = self._delete(root.left, earthquake, list_deleted)
             elif value_key[0] > root_key[0]:
-                root.right = self._delete(root.right, earthquake)
+                root.right = self._delete(root.right, earthquake, list_deleted)
 
         elif value_key[1] != root_key[1]:
             if value_key[1] < root_key[1]:
-                root.left = self._delete(root.left,earthquake )
+                root.left = self._delete(root.left,earthquake, list_deleted )
             elif value_key[1] > root_key[1]:
-                root.right = self._delete(root.right, earthquake)
+                root.right = self._delete(root.right, earthquake, list_deleted)
 
         elif value_key[2] != root_key[2]:
             if value_key[2] < root_key[2]:
-                root.left = self._delete(root.left, earthquake)
+                root.left = self._delete(root.left, earthquake, list_deleted)
             elif value_key[2] > root_key[2]:
-                root.right = self._delete(root.right, earthquake)
+                root.right = self._delete(root.right, earthquake, list_deleted)
 
         else:
+            list_deleted.append(earthquake.value.get_id())
             if root.is_leaf():
                 return None
             if root.left is None:
@@ -437,24 +459,56 @@ class AVL:
 
         return list_similitude
 
-
-    """
-    def edit_event(self, id, info_new):
+    def data_correction(self, id, new_info):
         earthquake=self.research(id)
         if earthquake is None:
             return None
-        self._edit_event(self, earthquake, info_new)
+        return self._data_correction(earthquake, new_info)
     
-    def _edit_event (self, earthquake, info_new):
-        earthquakee=earthquake.value
-        earthquake_old=earthquake.value
+    def _data_correction (self, earthquake, new_info):
+        event = earthquake.value
+        old_key = event.get_code()
+
+        if "magnitud" in new_info:
+            event.set_magnitude(new_info["magnitud"])
+            event.set_priority()
+
+        elif "profundidad" in new_info:
+            event.set_depth(new_info["profundidad"])
+            event.set_priority()
+
+        elif "epicentro" in new_info:
+            event.set_epicenter(new_info["epicentro"][0], new_info["epicentro"][1])
+            event.set_zone()
+            event.set_priority()
+
+        elif "fecha y hora" in new_info:
+            event.set_date(new_info["fecha y hora"])
+
+        #elif "estacion" in new_info:
+            #event.set_stations(new_info["estacion"])
+
+        new_key=event.get_code()
+
+        if (old_key == new_key):
+            return "Datos corregidos. El sismo esta en el mismo lugar."
+        else:
+            self.delete(id)
+            self.list_deleted.pop(-1)
+            self.insert(event)
+            return("datos corregidos. se reubico el sismo")
+
+
+    """
+    def archiv_tree (self, id):
+        earthquake=self.research(id)
+        if (earthquake is None):
+            return None
+        else:
+            self.root = self._delete(self.root, earthquake)
+            return earthquake
+
 
 
     #def historic ()
     """
-
-    def review(self, id):
-        if self.research(id):
-            return 1
-        else:
-            return 0
