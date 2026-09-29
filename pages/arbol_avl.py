@@ -178,12 +178,18 @@ with st.sidebar:
             st.rerun()
     if st.button("Deshacer última acción"):
         last_operation = st.session_state.avl_undo.peek_undo()
-        if st.session_state.avl_archiver.undo_last(st.session_state.avl_undo):
-            if last_operation and last_operation.get("type") == "eliminar_evento":
+        undone = False
+        if last_operation and last_operation.get("type") == "eliminar_evento":
+            undone = st.session_state.avl_tree.undo_delete(st.session_state.avl_undo)
+            if undone:
                 restored_id = last_operation["event_id"]
                 st.session_state.avl_deleted_ids.discard(restored_id)
                 st.session_state.avl_restored_ids.add(restored_id)
-            st.success("El archivado se deshizo como una sola acción.")
+        else:
+            undone = st.session_state.avl_archiver.undo_last(st.session_state.avl_undo)
+
+        if undone:
+            st.success("La última acción se deshizo correctamente.")
             st.rerun()
     st.info("Los eventos de ejemplo se reconstruyen en cada cambio para evitar modificar otros estados de la aplicación.")
 

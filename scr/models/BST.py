@@ -148,49 +148,34 @@ class BST:
             return self._research(node.right, id)
 
     def delete(self, id):
-        earthquake=self.research(id)
-        if (earthquake is None):
+        earthquake = self.research(id)
+        if earthquake is None or id in self.retired_ids:
             return None
-        else:
-            self.root = self._delete(self.root, earthquake, self.list_deleted)
-            return earthquake
 
-    def _delete(self, root: Optional[Node], earthquake, list_deleted ) -> Optional[Node]:
+        deleted_event = earthquake.value
+        self.root = self._delete(self.root, earthquake.value.get_code())
+        self.list_deleted.append(id)
+        self.retired_ids.add(id)
+        return Node(deleted_event)
 
+    def _delete(self, root: Optional[Node], key) -> Optional[Node]:
         if root is None:
             return None
-        value_key = earthquake.value.get_code()
+
         root_key = root.value.get_code()
-        
-        if value_key[0] != root_key[0]:
-            if value_key[0] < root_key[0]:
-                root.left = self._delete(root.left, earthquake, list_deleted)
-            elif value_key[0] > root_key[0]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
-
-        elif value_key[1] != root_key[1]:
-            if value_key[1] < root_key[1]:
-                root.left = self._delete(root.left,earthquake, list_deleted )
-            elif value_key[1] > root_key[1]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
-
-        elif value_key[2] != root_key[2]:
-            if value_key[2] < root_key[2]:
-                root.left = self._delete(root.left, earthquake, list_deleted)
-            elif value_key[2] > root_key[2]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
-
+        if key < root_key:
+            root.left = self._delete(root.left, key)
+        elif key > root_key:
+            root.right = self._delete(root.right, key)
         else:
-            list_deleted.append(earthquake.value.get_id())
-            if root.is_leaf():
-                return None
             if root.left is None:
                 return root.right
             if root.right is None:
                 return root.left
+
             successor = self._find_minimum(root.right)
             root.value = successor.value
-            root.right = self._delete(root.right, successor)
+            root.right = self._delete(root.right, successor.value.get_code())
 
         return root
                 
