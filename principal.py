@@ -17,6 +17,7 @@ st.set_page_config(
 
 st.title("SismoLab", text_alignment="center")
 
+
 if "show_options" not in st.session_state:
     st.session_state.show_options = False
 if "show_form" not in st.session_state:
@@ -25,13 +26,20 @@ if "show_search" not in st.session_state:
     st.session_state.show_search = False
 if "show_upload" not in st.session_state:
     st.session_state.show_upload = False
+
+
+# CARGAR LOS DATOS DEL JSON
 if "data" not in st.session_state:
     try:
         st.session_state.data = cargar_json()
     except FileNotFoundError:
         st.session_state.data = []
+
+# CREAR Y RECONSTRUIR EL AVL
 if "arbol" not in st.session_state:
+
     st.session_state.arbol = AVL()
+
     for sismo in st.session_state.data:
 
         evento = Event(
@@ -46,9 +54,11 @@ if "arbol" not in st.session_state:
 
         st.session_state.arbol.insert(evento)
 
-
-
+# RECUPERAR EL ARBOL
 arbol = st.session_state.arbol
+
+# MOSTRAR INFORMACIÓN
+recorrido = arbol.in_order()
 #Markdown sirve pa utilizar css y html, o para mostrar texto, el unsafe permite que el streamlit permita el css
 st.markdown("""
 <style>

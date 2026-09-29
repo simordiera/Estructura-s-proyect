@@ -12,19 +12,5 @@
         "estación": "Estación 02",
         "estado_atención": "Pendiente",
         "profundidad": 25.0
-    },
-    {
-        "identificador": 103,
-        "magnitud": 5.1,
-        "coordenadas": [
-            -75.65,
-            5.1
-        ],
-        "fecha": "2026-09-22",
-        "hora": "18:45:00",
-        "lugar_reporte": "Chinchiná",
-        "estación": "Estación 03",
-        "estado_atención": "Atendido",
-        "profundidad": 40.2
     }
 ]

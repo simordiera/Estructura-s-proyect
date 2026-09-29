@@ -1,7 +1,7 @@
 from datetime import datetime
 class Event:
 
-    def __init__(self, id , magnitude, depth, epicenter, date, stations):
+    def __init__(self, id , magnitude, depth, epicenter, date, stations, attention_status):
         self.set_id(id)
         self.set_magnitude(magnitude)
         self.set_depth(depth)
@@ -123,12 +123,6 @@ class Event:
     def get_station(self):
         station=self._station
         return station
-
-    def review(self, id):
-        if self.research(id):
-            return 1
-        else:
-            return 0
 
     def __str__(self):
         return f"({self._priority},{self._magnitude},{self._id})"+str(self.__dict__)
