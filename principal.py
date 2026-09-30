@@ -36,8 +36,8 @@ if "data" not in st.session_state:
         st.session_state.data = []
 
 # CREAR Y RECONSTRUIR EL AVL
-if "avl" not in st.session_state:
-    st.session_state.avl = AVL()
+if "arbol" not in st.session_state:
+    st.session_state.arbol = AVL()
 
     for sismo in st.session_state.data:
 
@@ -54,7 +54,7 @@ if "avl" not in st.session_state:
         st.session_state.arbol.insert(evento)
 
 # RECUPERAR EL ARBOL
-arbol = st.session_state.avl
+arbol = st.session_state.arbol
 
 # MOSTRAR INFORMACIÓN
 recorrido = arbol.in_order()
@@ -201,6 +201,21 @@ if st.session_state.get("show_search", False):
         st.session_state.show_search = False
         st.rerun()
 
+#checkbox pa altura de nodo que busque
+if st.checkbox("Mostrar altura del nodo que se busque"):
+    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999)
+    sismo=arbol.research(id)
+    if sismo is None:
+        st.write("No se encontró ningún sismo con ese ID.")
+    else:
+        height=sismo.height
+        st.write("Altura del nodo:")
+        st.write(f"ID: {sismo.get_id()}, Altura: {height}")
+    
+
+
+
+#checbox pa nivel de nodo
 #aparece en el menu cuando se meten en la pag prin
 st.sidebar.success('Aqui puedes navegar a las diferentes paginas del proyecto')
 

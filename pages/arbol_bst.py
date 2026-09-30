@@ -145,7 +145,7 @@ with st.sidebar:
 tree = st.session_state.bst_tree
 
 # El BST solo compara la topologia del mismo conjunto de eventos del AVL.
-avl_state = st.session_state.get("avl_sync_state")
+avl_state = st.session_state.get("arbol")
 if avl_state is not None:
     target_events = list(avl_state["active_events"])
     if insertion_order == "Clave ascendente":
