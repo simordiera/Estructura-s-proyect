@@ -207,18 +207,4 @@ else:
 st.subheader("Métricas")
 st.json(tree.metrics.counters)
 
-st.subheader("Recorridos")
-traversal_columns = st.columns(4)
-traversals = (
-    ("Preorden", tree.pre_order()),
-    ("Inorden", tree.in_order()),
-    ("Postorden", tree.post_order()),
-    ("Por niveles", tree.breadth_first()),
-)
-for column, (title, traversal) in zip(traversal_columns, traversals):
-    with column:
-        identifiers = [f"SIS-{event.get_id():06d}" for event in (traversal or [])]
-        st.write(f"**{title}**")
-        st.code(" -> ".join(identifiers) if identifiers else "Arbol vacio")
 
-st.caption("Las lineas discontinuas representan enlaces vacios. La profundidad del nodo es distinta de la profundidad del hipocentro.")

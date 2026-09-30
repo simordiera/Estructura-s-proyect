@@ -3,13 +3,10 @@ import pandas as pd
 import plotly.express as px
 import json
 from scr.models.Event import Event
-from scr.models.Archivo import guardar_json
+from scr.models.Archivo import guardar_json , cargar_json
 from scr.models.AVL import AVL
 #NO FUN IONA NADA, GAS, NO ME TOQUEN EL CODIGO
-if "arbol" not in st.session_state:
-    st.session_state.arbol = AVL()
 
-arbol = st.session_state.arbol
 #configuracion visual de la pag
 st.set_page_config(
     page_title="SismoLab",
@@ -20,13 +17,48 @@ st.set_page_config(
 
 st.title("SismoLab", text_alignment="center")
 
+
 if "show_options" not in st.session_state:
     st.session_state.show_options = False
 if "show_form" not in st.session_state:
     st.session_state.show_form = False
 if "show_search" not in st.session_state:
     st.session_state.show_search = False
+if "show_upload" not in st.session_state:
+    st.session_state.show_upload = False
 
+
+# CARGAR LOS DATOS DEL JSON
+if "data" not in st.session_state:
+    try:
+        st.session_state.data = cargar_json()
+    except FileNotFoundError:
+        st.session_state.data = []
+
+# CREAR Y RECONSTRUIR EL AVL
+if "arbol" not in st.session_state:
+
+    st.session_state.arbol = AVL()
+
+    for sismo in st.session_state.data:
+
+        evento = Event(
+            sismo["identificador"],
+            sismo["magnitud"],
+            sismo["profundidad"],
+            tuple(sismo["coordenadas"]),
+            f'{sismo["fecha"]}T{sismo["hora"]}',
+            sismo["estación"],
+            sismo["estado_atención"]
+        )
+
+        st.session_state.arbol.insert(evento)
+
+# RECUPERAR EL ARBOL
+arbol = st.session_state.arbol
+
+# MOSTRAR INFORMACIÓN
+recorrido = arbol.in_order()
 #Markdown sirve pa utilizar css y html, o para mostrar texto, el unsafe permite que el streamlit permita el css
 st.markdown("""
 <style>
@@ -53,17 +85,35 @@ if st.session_state.show_options:
     #oprimir boton para poder cargar un archivo de tipo JSON (TENGO QUE CORREGIR LO DE QUE SE CIERRA SOLO)
     with col1:
         if st.button("Subir archivo JSON"):
+            st.session_state.show_upload = True
+
+        if st.session_state.show_upload:
             uploaded_file = st.file_uploader("Puedes subir tu archivo aquí! :)",
             type=["json"]
             )
 
             if uploaded_file is not None:
                 data = json.load(uploaded_file)
+                for sismo in data:
+                    evento = Event(
+                    sismo["identificador"],
+                    sismo["magnitud"],
+                    sismo["profundidad"],
+                    tuple(sismo["coordenadas"]),
+                    f'{sismo["fecha"]}T{sismo["hora"]}',
+                    sismo["estación"],
+                    sismo["estado_atención"]
+        )
+
+                    arbol.insert(evento)
                 guardar_json(data)
                 st.success("Archivo cargado correctamente :)")
                 st.session_state.data = data
-                st.session_state.show_options = False
-                st.rerun()
+                st.write(st.session_state.data)
+                st.success("Archivo cargado correctamente :)")
+                #st.session_state.show_options = False
+                #st.session_state.show_upload = False
+                #st.rerun()
 
     #segundo boton para llenar los datos manalmente(tengo que )
     with col2:
@@ -98,7 +148,10 @@ if st.session_state.show_options:
                             "coordenadas": (x, y),
                             "fecha": str(date),
                             "hora": str(time),
-                            "lugar_reporte": report_location
+                            "lugar_reporte": report_location,
+                            "estación":stations,
+                            "estado_atención":attention_status,
+                            "profundidad":depth,
                 })
 
                         guardar_json(st.session_state.data)
@@ -140,7 +193,6 @@ if st.session_state.get("show_search", False):
     id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999)
     if st.button("esta el sismo?"):
         result= arbol.review(id)
-
         if result==1:
             st.write("Esta en el arbol")
         else:
