@@ -223,7 +223,7 @@ with left_column:
     st.graphviz_chart(tree_to_dot(tree), use_container_width=True)
 with right_column:
     st.metric("Eventos activos", len(events))
-    st.metric("Altura", calculated_height(tree.root))
+    st.metric("Altura", tree.height())
     st.metric("Raíz", f"SIS-{tree.root.value.get_id():06d}" if tree.root else "-",)
     st.metric("Hojas", sum(1 for row in event_rows(tree) if row["Altura"] == 0))
 
