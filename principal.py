@@ -37,6 +37,7 @@ if "data" not in st.session_state:
 
 # CREAR Y RECONSTRUIR EL AVL
 if "arbol" not in st.session_state:
+
     st.session_state.arbol = AVL()
 
     for sismo in st.session_state.data:

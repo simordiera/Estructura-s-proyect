@@ -9,7 +9,7 @@ class Event:
         
         self.set_datetime(date)
         self.set_stations = stations
-
+        self.set_attention_status = attention_status
         self.set_zone()
         self.set_priority()
 

@@ -215,6 +215,6 @@ for column, (title, traversal) in zip(traversal_columns, traversals):
     with column:
         identifiers = [f"SIS-{event.get_id():06d}" for event in (traversal or [])]
         st.write(f"**{title}**")
-        st.code(" → ".join(identifiers) if identifiers else "Árbol vacío")
+        st.code(" -> ".join(identifiers) if identifiers else "Arbol vacio")
 
-
+st.caption("Las lineas discontinuas representan enlaces vacios. La profundidad del nodo es distinta de la profundidad del hipocentro.")
