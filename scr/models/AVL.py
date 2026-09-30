@@ -89,33 +89,36 @@ class AVL:
             return Node(value)
         value_key = value.get_code()
         node_key = node.value.get_code()
-        
-        if value_key[0] != node_key[0]:
-            if value_key[0] < node_key[0]:
-                node.left = self._insert(node.left, value)
 
-            elif value_key[0] > node_key[0]:
-                node.right = self._insert(node.right, value)
+        if (value_key[2] != node_key[2]):
+            if value_key[0] != node_key[0]:
+                if value_key[0] < node_key[0]:
+                    node.left = self._insert(node.left, value)
 
-        elif value_key[1] != node_key[1]:
-            if value_key[1] < node_key[1]:
-                node.left = self._insert(node.left, value)
+                elif value_key[0] > node_key[0]:
+                    node.right = self._insert(node.right, value)
 
-            elif value_key[1] > node_key[1]:
-                node.right = self._insert(node.right, value)
+            elif value_key[1] != node_key[1]:
+                if value_key[1] < node_key[1]:
+                    node.left = self._insert(node.left, value)
 
-        elif value_key[2] != node_key[2]:
-            if value_key[2] < node_key[2]:
-                node.left = self._insert(node.left, value)
+                elif value_key[1] > node_key[1]:
+                    node.right = self._insert(node.right, value)
 
-            elif value_key[2] > node_key[2]:
-                node.right = self._insert(node.right, value)
+            elif value_key[2] != node_key[2]:
+                if value_key[2] < node_key[2]:
+                    node.left = self._insert(node.left, value)
 
-        else:
+                elif value_key[2] > node_key[2]:
+                    node.right = self._insert(node.right, value)
+
             return node
 
-        return node
+        else:
+            self.same_earthquake(value, node)
 
+        return node
+        
         
     def balance (self) -> None:
         self.root = self._balance(self.root)
@@ -238,10 +241,10 @@ class AVL:
         if (earthquake is None):
             return None
         else:
-            self.root = self._delete(self.root, earthquake, self.list_deleted)
+            self.root = self._delete(self.root, earthquake, self.list_deleted, register_deleted=True)
             return earthquake
 
-    def _delete(self, root: Optional[Node], earthquake, list_deleted ) -> Optional[Node]:
+    def _delete(self, root: Optional[Node], earthquake, list_deleted, register_deleted: bool) -> Optional[Node]:
 
         if root is None:
             return None
@@ -250,24 +253,25 @@ class AVL:
         
         if value_key[0] != root_key[0]:
             if value_key[0] < root_key[0]:
-                root.left = self._delete(root.left, earthquake, list_deleted)
+                root.left = self._delete(root.left, earthquake, list_deleted, register_deleted)
             elif value_key[0] > root_key[0]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
+                root.right = self._delete(root.right, earthquake, list_deleted, register_deleted)
 
         elif value_key[1] != root_key[1]:
             if value_key[1] < root_key[1]:
-                root.left = self._delete(root.left,earthquake, list_deleted )
+                root.left = self._delete(root.left,earthquake, list_deleted, register_deleted)
             elif value_key[1] > root_key[1]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
+                root.right = self._delete(root.right, earthquake, list_deleted, register_deleted)
 
         elif value_key[2] != root_key[2]:
             if value_key[2] < root_key[2]:
-                root.left = self._delete(root.left, earthquake, list_deleted)
+                root.left = self._delete(root.left, earthquake, list_deleted, register_deleted)
             elif value_key[2] > root_key[2]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
+                root.right = self._delete(root.right, earthquake, list_deleted, register_deleted)
 
         else:
-            list_deleted.append(earthquake.value.get_id())
+            if register_deleted:
+                list_deleted.append(earthquake.value.get_id())
             if root.is_leaf():
                 return None
             if root.left is None:
@@ -276,7 +280,7 @@ class AVL:
                 return root.left
             successor = self._find_minimum(root.right)
             root.value = successor.value
-            root.right = self._delete(root.right, successor)
+            root.right = self._delete(root.right, successor, list_deleted, False)
 
         return root
         
@@ -483,37 +487,73 @@ class AVL:
             event.set_priority()
 
         elif "fecha y hora" in new_info:
-            event.set_date(new_info["fecha y hora"])
+            event.set_datetime(new_info["fecha y hora"])
 
-        #elif "estacion" in new_info:
-            #event.set_stations(new_info["estacion"])
+        elif "estacion" in new_info:
+            event.set_stations(new_info["estacion"])
 
         new_key=event.get_code()
 
         if (old_key == new_key):
             return "Datos corregidos. El sismo esta en el mismo lugar."
         else:
-            self.delete(id)
-            self.list_deleted.pop(-1)
+            event.set_review(0)
+            self.delete(event.get_id())
+            if self.list_deleted:
+                self.list_deleted.pop(-1)
             self.insert(event)
             return("datos corregidos. se reubico el sismo")
 
 
-    """
-    def archiv_tree (self, id):
-        earthquake=self.research(id)
-        if (earthquake is None):
-            return None
-        else:
-            self.root = self._delete(self.root, earthquake)
-            return earthquake
 
-
-
-    #def historic ()
-    """
     def review(self, id):
-        if self.research(id):
-            return 1
+        earthquake = self.research(id)
+        if earthquake is None:
+            return None
+
+        earthquake.value.set_review(1)
+        earthquake.value.set_revisions(earthquake.value.get_revisions() + 1)
+        return True
+        
+    def same_earthquake(self, event, existing_node):
+        return self._same_earthquake(event, existing_node)
+
+    def _same_earthquake(self, event, existing_node):
+        existing_event = existing_node.value
+        new_event = event
+        old_key = existing_event.get_code()
+        
+        if (new_event.get_id() == existing_event.get_id() and
+            new_event.get_magnitude() == existing_event.get_magnitude() and
+            new_event.get_depth() == existing_event.get_depth() and
+            new_event.get_epicenter() == existing_event.get_epicenter() and
+            new_event.get_datetime() == existing_event.get_datetime() and
+            new_event.get_station() == existing_event.get_station()):
+
+            existing_event.set_review(1)
+            existing_event.set_revisions(existing_event.get_revisions() + 1)
+            return True
+
+        elif new_event.get_revisions() > existing_event.get_revisions():
+            existing_event.set_magnitude(new_event.get_magnitude())
+            existing_event.set_depth(new_event.get_depth())
+            epicenter=new_event.get_epicenter()
+            existing_event.set_epicenter(epicenter[0], epicenter[1])
+            existing_event.set_zone()
+            existing_event.datetime = new_event.get_datetime()
+            existing_event.set_station(new_event.get_station())
+            existing_event.set_priority()
+            existing_event.set_review(0)
+            existing_event.set_revisions(new_event.get_revisions())
+            
+            if (existing_event.get_code() == old_key):
+                return True
+            else:
+                self.delete(existing_event.get_id())
+                if self.list_deleted:
+                    self.list_deleted.pop(-1)
+                self.insert(existing_event)
+                return True
+        
         else:
-            return 0
+            return False
