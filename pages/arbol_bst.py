@@ -181,10 +181,6 @@ with right_column:
     st.metric("Raiz", f"SIS-{tree.root.value.get_id():06d}" if tree.root else "-")
     st.metric("Hojas", sum(1 for row in event_rows(tree) if row["Altura"] == 0))
 
-st.subheader("Detalle de nodos")
-st.dataframe(event_rows(tree), use_container_width=True, hide_index=True)
-st.caption("Las eliminaciones se realizan desde la página AVL y se reflejan aquí automáticamente.")
-
 st.subheader("Histórico")
 if tree.list_historic:
     st.dataframe(
@@ -206,5 +202,19 @@ else:
 
 st.subheader("Métricas")
 st.json(tree.metrics.counters)
+
+st.subheader("Recorridos")
+traversal_columns = st.columns(4)
+traversals = (
+    ("Preorden", tree.pre_order()),
+    ("Inorden", tree.in_order()),
+    ("Postorden", tree.post_order()),
+    ("Por niveles", tree.breadth_first()),
+)
+for column, (title, traversal) in zip(traversal_columns, traversals):
+    with column:
+        identifiers = [f"SIS-{event.get_id():06d}" for event in (traversal or [])]
+        st.write(f"**{title}**")
+        st.code(" → ".join(identifiers) if identifiers else "Árbol vacío")
 
 

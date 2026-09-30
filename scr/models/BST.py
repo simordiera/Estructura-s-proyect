@@ -57,7 +57,7 @@ class BST:
 
     def pre_order(self) -> None:
         if self.root is None:
-            return
+            return 
         items = []
         items = self._pre_order(self.root, items)
         return items

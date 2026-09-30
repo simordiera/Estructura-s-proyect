@@ -36,9 +36,8 @@ if "data" not in st.session_state:
         st.session_state.data = []
 
 # CREAR Y RECONSTRUIR EL AVL
-if "arbol" not in st.session_state:
-
-    st.session_state.arbol = AVL()
+if "avl" not in st.session_state:
+    st.session_state.avl = AVL()
 
     for sismo in st.session_state.data:
 
@@ -55,7 +54,7 @@ if "arbol" not in st.session_state:
         st.session_state.arbol.insert(evento)
 
 # RECUPERAR EL ARBOL
-arbol = st.session_state.arbol
+arbol = st.session_state.avl
 
 # MOSTRAR INFORMACIÓN
 recorrido = arbol.in_order()
@@ -126,9 +125,9 @@ if st.session_state.show_options:
                 id = st.number_input("ingrese el identificador",step=1,min_value=1,max_value=999999)
                 magnitude = st.number_input("ingrese la magnitud",min_value=-2.0,max_value=10.0,step=0.1)
                 depth = st.number_input("ingrese la profundidad",min_value=0.0,max_value=700.0,step=0.1)
-                x = st.number_input("coordenada X",min_value=-180,max_value=180)
-                y = st.number_input("coordenada Y", min_value=-90,  max_value=90)
-                date = st.date_input("fecha")
+                x = st.number_input("coordenada X",min_value=0,max_value=1000)
+                y = st.number_input("coordenada Y", min_value=0,  max_value=1000)
+                date = st.date_input("fecha", max_value=pd.Timestamp.now().date())
                 time = st.time_input("hora")
                 attention_status = st.text_input("estado de atención")
                 stations = st.text_input("estaciones")
@@ -203,9 +202,11 @@ if st.session_state.get("show_search", False):
         st.rerun()
 
 #aparece en el menu cuando se meten en la pag prin
-st.sidebar.success('ya no aguanto, ya no aguanto')
+st.sidebar.success('Aqui puedes navegar a las diferentes paginas del proyecto')
 
 #mapaaaaaa
+st.header("Mapa de sismos")
+st.info("Puedes hacer zoom y mover el mapa para explorar los sismos registrados. Los puntos representan la ubicación de cada sismo, y su tamaño y color reflejan la magnitud del evento.")
 
 if "data" in st.session_state and len(st.session_state.data) > 0:
 

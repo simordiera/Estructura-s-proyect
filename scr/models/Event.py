@@ -66,7 +66,7 @@ class Event:
         return H
 
     def set_epicenter(self, x, y):
-        if (-180<=x<=180 and -90<=y<=90):
+        if (0<=x<=1000 and 0<=y<=1000):
             self._epicenter=(x,y)
             return True
         return False
