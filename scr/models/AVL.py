@@ -242,10 +242,10 @@ class AVL:
         if earthquake is None or id in self.retired_ids:
             return None
         else:
-            self.root = self._delete(self.root, earthquake, self.list_deleted)
+            self.root = self._delete(self.root, earthquake, self.list_deleted, register_deleted=True)
             return earthquake
 
-    def _delete(self, root: Optional[Node], earthquake, list_deleted ) -> Optional[Node]:
+    def _delete(self, root: Optional[Node], earthquake, list_deleted, register_deleted: bool) -> Optional[Node]:
 
         if root is None:
             return None
@@ -255,24 +255,25 @@ class AVL:
         
         if value_key[0] != root_key[0]:
             if value_key[0] < root_key[0]:
-                root.left = self._delete(root.left, earthquake, list_deleted)
+                root.left = self._delete(root.left, earthquake, list_deleted, register_deleted)
             elif value_key[0] > root_key[0]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
+                root.right = self._delete(root.right, earthquake, list_deleted, register_deleted)
 
         elif value_key[1] != root_key[1]:
             if value_key[1] < root_key[1]:
-                root.left = self._delete(root.left,earthquake, list_deleted )
+                root.left = self._delete(root.left,earthquake, list_deleted, register_deleted)
             elif value_key[1] > root_key[1]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
+                root.right = self._delete(root.right, earthquake, list_deleted, register_deleted)
 
         elif value_key[2] != root_key[2]:
             if value_key[2] < root_key[2]:
-                root.left = self._delete(root.left, earthquake, list_deleted)
+                root.left = self._delete(root.left, earthquake, list_deleted, register_deleted)
             elif value_key[2] > root_key[2]:
-                root.right = self._delete(root.right, earthquake, list_deleted)
+                root.right = self._delete(root.right, earthquake, list_deleted, register_deleted)
 
         else:
-            list_deleted.append(earthquake.value.get_id())
+            if register_deleted:
+                list_deleted.append(earthquake.value.get_id())
             if root.is_leaf():
                 return None
             if root.left is None:
@@ -282,7 +283,7 @@ class AVL:
 
             successor = self._find_minimum(root.right)
             root.value = successor.value
-            root.right = self._delete(root.right, successor, list_deleted)
+            root.right = self._delete(root.right, successor, list_deleted, False)
 
         self._update_height(root)
         if self.stress_mode:
@@ -547,8 +548,10 @@ class AVL:
         if (old_key == new_key):
             return "Datos corregidos. El sismo esta en el mismo lugar."
         else:
-            self.delete(id)
-            self.list_deleted.pop(-1)
+            event.set_review(0)
+            self.delete(event.get_id())
+            if self.list_deleted:
+                self.list_deleted.pop(-1)
             self.insert(event)
             return("datos corregidos. se reubico el sismo")
 

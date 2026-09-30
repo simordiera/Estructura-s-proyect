@@ -1,8 +1,7 @@
 from datetime import datetime
 class Event:
 
-    def __init__(self, id, magnitude, depth, epicenter, datetime, station,
-                 attention_status="Pendiente", revisions=None):
+    def __init__(self, id , magnitude, depth, epicenter, datetime, station, revisions=None):
         self.set_id(id)
         self.set_magnitude(magnitude)
         self.set_depth(depth)
