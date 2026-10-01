@@ -25,7 +25,7 @@ def create_example_events():
         (900, 4.8, 10.0, (30.0, 40.0), "2026-09-25 19:30", "sta09"),
     ]
     return [
-        Event(identifier, magnitude, depth, epicenter, date, {station}, attention_status="Pendiente")
+        Event(identifier, magnitude, depth, epicenter, date, {station})
         for identifier, magnitude, depth, epicenter, date, station in examples
     ]
 

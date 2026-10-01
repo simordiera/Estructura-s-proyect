@@ -140,7 +140,10 @@ if st.session_state.show_options:
                         st.error("El sismo ya esta registrado")
                     else:
                         fecha_hora = f"{date}T{time}"
-                        evento = Event(id,magnitude,depth,(x, y),fecha_hora,stations,attention_status)
+                        evento = Event(id,magnitude,depth,(x, y),fecha_hora,stations)
+                        evento.set_review(
+                            1 if attention_status.lower() == "revisado" else 0
+                        )
                         arbol.insert(evento)
                         st.session_state.data.append ({
                             "identificador": id,
