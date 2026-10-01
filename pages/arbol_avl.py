@@ -145,16 +145,10 @@ if "avl_restored_ids" not in st.session_state:
 
 
 with st.sidebar:
-    st.header("Ejemplo")
-    insertion_order = st.selectbox(
-        "Orden de inserción",
-        ("Orden del archivo", "Clave ascendente", "Clave descendente"),
-    )
-    balance_tree = st.checkbox("Aplicar balanceo AVL", value=True)
-    st.session_state.stress_mode = not balance_tree
-    st.session_state.archive_age_hours = st.number_input(
-        "Antigüedad mínima T (horas)", min_value=1, value=72, step=1
-    )
+    insertion_order = "Orden del archivo"
+    balance_tree = True
+    st.session_state.stress_mode = False
+    st.session_state.archive_age_hours = 72
     st.session_state.avl_tree.set_simulation_clock(datetime.now())
     st.session_state.avl_tree.set_archive_age_hours(st.session_state.archive_age_hours)
     st.session_state.avl_tree.stress_mode = st.session_state.stress_mode

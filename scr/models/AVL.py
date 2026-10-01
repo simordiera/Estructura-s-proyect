@@ -299,41 +299,6 @@ class AVL:
                 root.right = self._rotate_right(root.right)
             return self._rotate_left(root)
         return root
-
-    def delete_active(self, event_id, undo_stack=None):
-        event_node = self.research(event_id)
-        if event_node is None or event_id in self.retired_ids:
-            return False
-
-        snapshot = {
-            "root": deepcopy(self.root),
-            "list_deleted": list(self.list_deleted),
-            "retired_ids": set(self.retired_ids),
-            "metrics": self.metrics.snapshot(),
-        }
-        if self.delete(event_id) is None:
-            return False
-
-        if undo_stack is not None:
-            undo_stack.push_undo({
-                "type": "eliminar_evento",
-                "event_id": event_id,
-                "snapshot": snapshot,
-            })
-        return True
-
-    def undo_delete(self, undo_stack):
-        operation = undo_stack.peek_undo()
-        if not operation or operation.get("type") != "eliminar_evento":
-            return False
-
-        snapshot = operation["snapshot"]
-        self.root = snapshot["root"]
-        self.list_deleted = list(snapshot["list_deleted"])
-        self.retired_ids = set(snapshot["retired_ids"])
-        self.metrics.restore(snapshot["metrics"])
-        undo_stack.pop_undo()
-        return True
         
     def height(self) -> int:
         if self.root is None:
