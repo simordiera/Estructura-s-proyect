@@ -65,24 +65,6 @@ tree.insert(event4)
 tree.insert(event5)
 tree.insert(event6)
 
-"""
-items = tree.breadth_first()
-for event in items:
-    print(event)
-
-print(" ")
-
-tree.delete(400)
-
-
-items = tree.breadth_first()
-for event in items:
-    print(event)
-
-print(" ")
-
-"""
-
 
 items = tree.breadth_first()
 for event in items:
@@ -107,6 +89,8 @@ for event in items:
     print(event)
 
 print (" ")
+
+tree.review(500) #revision de un sismo
 
 tree.balance()
 
@@ -137,3 +121,23 @@ if result1:
         print(f" la replica es: {nodo.value}")
 else:
     print("No hay replicas")
+
+event7 = Event(
+    500,
+    8.0,
+    40.0,
+    (200.0 , 0.0),
+    "2026-09-18 15:30",
+    {"sta07"},
+    4
+)
+
+tree.insert(event7)
+
+
+items = tree.breadth_first()
+for event in items:
+    print(event)
+
+print(" ")
+
