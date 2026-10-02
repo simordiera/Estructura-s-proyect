@@ -1,16 +1,41 @@
 class UndoStack:
-	# Pila LIFO de acciones completas, no de pasos internos del AVL.
 	def __init__(self):
-		self.actions = []
+		self.undo_actions = []
+		self.redo_actions = []
 
-	def push_undo(self, action):
-		self.actions.append(action)
+	def push(self, operation):
+		# Una 
+		self.undo_actions.append(operation)
+		self.redo_actions.clear()
 
-	def pop_undo(self):
-		return self.actions.pop() if self.actions else None
+	def undo(self):
+		if len(self.undo_actions) == 0:
+			return None
 
-	def peek_undo(self):
-		return self.actions[-1] if self.actions else None
+		operation = self.undo_actions.pop()
+		self.redo_actions.append(operation)
+		return operation
+
+	def redo(self):
+		if len(self.redo_actions) == 0:
+			return None
+
+		operation = self.redo_actions.pop()
+		self.undo_actions.append(operation)
+		return operation
 
 	def is_undo_empty(self):
-		return not self.actions
+		return len(self.undo_actions) == 0
+
+	def is_redo_empty(self):
+		return len(self.redo_actions) == 0
+
+	def peek_undo(self):
+		if len(self.undo_actions) == 0:
+			return None
+		return self.undo_actions[-1]
+
+	def peek_redo(self):
+		if len(self.redo_actions) == 0:
+			return None
+		return self.redo_actions[-1]

@@ -1,23 +1,40 @@
 from datetime import datetime
 class Event:
 
-    def __init__(self, id , magnitude, depth, epicenter, date, stations, attention_status):
+    def __init__(self, id , magnitude, depth, epicenter, datetime, station, revisions=None):
         self.set_id(id)
         self.set_magnitude(magnitude)
         self.set_depth(depth)
         self.set_epicenter(epicenter[0], epicenter[1])
         
-        self.set_datetime(date)
-        self.set_stations = stations
-        self.set_attention_status = attention_status
+        self.set_datetime(datetime)
+        self.set_station(station)
+
         self.set_zone()
         self.set_priority()
 
-    #def set_review (self):
-    
+        self.set_review(0)
 
+        if revisions is None:
+            self.set_revisions(1)
+        else:
+            self.set_revisions(revisions)
+
+    def set_review(self, review):
+        self.review = review
+
+    def get_review(self):
+        review=self.review
+        return review
+
+    def set_revisions(self, revisions):
+        self.revisions = revisions
+
+    def get_revisions(self):
+        revisions=self.revisions
+        return revisions   
+     
     def set_datetime(self, date):
-
         date = datetime.fromisoformat(date)
         today = datetime.now()
 
@@ -30,11 +47,6 @@ class Event:
     def get_datetime(self):
         return self.datetime
 
-    def set_review(self):
-        self._reviewed = False
-        return True
-
-        
     def set_id (self, id):
         if (id>=1 and id<=999999):
             self._id=id
@@ -118,8 +130,9 @@ class Event:
         id=self._id
         return (p, M, id)
 
-    def station(self, station):
+    def set_station(self, station):
         self._station=station
+
     def get_station(self):
         station=self._station
         return station
