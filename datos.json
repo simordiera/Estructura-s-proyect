@@ -68,5 +68,19 @@
         "estación": "",
         "estado_atención": "",
         "profundidad": 0.0
+    },
+    {
+        "identificador": 102,
+        "magnitud": -2.0,
+        "coordenadas": [
+            0,
+            0
+        ],
+        "fecha": "2026-09-30",
+        "hora": "11:38:00",
+        "lugar_reporte": "",
+        "estación": "",
+        "estado_atención": "",
+        "profundidad": 0.0
     }
 ]
