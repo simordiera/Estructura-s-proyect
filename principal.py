@@ -1,12 +1,12 @@
-from turtle import color
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import json
+import os
 from scr.models.Event import Event
-from scr.models.Archivo import guardar_json , cargar_json
+from scr.models.Archivo import guardar_json , cargar_json, RUTA
 from scr.models.AVL import AVL
+from scr.models.Scenario import Scenario
 #NO FUN IONA NADA, GAS, NO ME TOQUEN EL CODIGO
 
 #configuracion visual de la pag
@@ -33,17 +33,15 @@ if "show_upload" not in st.session_state:
 
 # CARGAR LOS DATOS DEL JSON
 if "data" not in st.session_state:
-    try:
         st.session_state.data = cargar_json()
-    except FileNotFoundError:
-        st.session_state.data = []
+st.write("Ruta del JSON:", os.path.abspath(RUTA))
+st.write("Cantidad de datos cargados:", len(st.session_state.data))
 
 # CREAR Y RECONSTRUIR EL AVL
-if "arbol" not in st.session_state:
+if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or []) == 0:
     st.session_state.arbol = AVL()
 
     for sismo in st.session_state.data:
-
         evento = Event(
             sismo["identificador"],
             sismo["magnitud"],
@@ -51,14 +49,21 @@ if "arbol" not in st.session_state:
             tuple(sismo["coordenadas"]),
             f'{sismo["fecha"]}T{sismo["hora"]}',
             sismo["estación"],
-            sismo["estado_atención"]
         )
-
+        st.write("Creando evento:", evento.get_id())
         st.session_state.arbol.insert(evento)
+        st.write(
+            "Eventos en AVL después de insertar:",
+            len(st.session_state.arbol.in_order() or []))
 
 # RECUPERAR EL ARBOL
 arbol = st.session_state.arbol
+st.write("Datos cargados desde JSON:", len(st.session_state.data))
+st.write("Eventos dentro del AVL:", len(arbol.in_order() or []))
+if "scenario" not in st.session_state:
+    st.session_state.scenario = Scenario()
 
+st.session_state.scenario.tree = st.session_state.arbol
 # MOSTRAR INFORMACIÓN
 recorrido = arbol.in_order()
 #Markdown sirve pa utilizar css y html, o para mostrar texto, el unsafe permite que el streamlit permita el css
@@ -98,7 +103,12 @@ if st.session_state.show_options:
 
             if uploaded_file is not None:
                 data = json.load(uploaded_file)
-                for sismo in data:
+                st.session_state.data = data
+                guardar_json(st.session_state.data)
+                # RECONSTRUIR EL AVL
+                st.session_state.arbol = AVL()
+
+                for sismo in st.session_state.data:
                     evento = Event(
                     sismo["identificador"],
                     sismo["magnitud"],
@@ -106,18 +116,16 @@ if st.session_state.show_options:
                     tuple(sismo["coordenadas"]),
                     f'{sismo["fecha"]}T{sismo["hora"]}',
                     sismo["estación"],
-                    sismo["estado_atención"]
         )
 
-                    arbol.insert(evento)
-                guardar_json(data)
+                    st.session_state.arbol.insert(evento)
+                arbol=st.session_state.arbol
                 st.success("Archivo cargado correctamente :)")
-                st.session_state.data = data
                 st.write(st.session_state.data)
                 st.success("Archivo cargado correctamente :)")
                 #st.session_state.show_options = False
                 #st.session_state.show_upload = False
-                #st.rerun()
+                st.rerun()
 
     #segundo boton para llenar los datos manalmente(tengo que )
     with col2:
@@ -139,14 +147,12 @@ if st.session_state.show_options:
                 submitted = st.form_submit_button("Subir archivo")
 
                 if submitted:
-                    if arbol.review(id) == 1:
+                    if arbol.research(id) is not None:
                         st.error("El sismo ya esta registrado")
                     else:
                         fecha_hora = f"{date}T{time}"
                         evento = Event(id,magnitude,depth,(x, y),fecha_hora,stations)
-                        evento.set_review(
-                            1 if attention_status.lower() == "revisado" else 0
-                        )
+                        
                         arbol.insert(evento)
                         st.session_state.data.append ({
                             "identificador": id,
@@ -163,8 +169,15 @@ if st.session_state.show_options:
 
                         st.session_state.show_options = False
                         st.session_state.show_form = False
-                        #  st.rerun()
+                        st.rerun()
 #cambiar de color la pag si hay mas de 10 sismos, pa que se vea mas dramatico
+if "modo_estres" not in st.session_state:
+    st.session_state["modo_estres"] = False
+def cambiar_theme(): 
+    st.session_state["modo_estres"] = st.session_state["stress_checkbox"] 
+if "stress_checkbox" not in st.session_state:
+    st.session_state["stress_checkbox"] = st.session_state["modo_estres"]
+#MODOOO ESTREEEES
 with st.sidebar:
     st.title("seleccione aquí para el activar el modo estres")
     color_fondo="000000" #valores feiks para poder cambiar el color de la pag, si no se hace esto, el streamlit no deja cambiar el color de la pag
@@ -175,7 +188,10 @@ with st.sidebar:
     color_boton_texto="000000"
     color_fondo_pameter="000000"
     color_texto_pameter="000000"
-    if st.checkbox("Modo estres"):
+    color_fondo_ar="000000"
+    color_arriba="000000"
+    st.checkbox("Modo estres", key="stress_checkbox", on_change=cambiar_theme)
+    if st.session_state["modo_estres"]:
         color_fondo = "#9c0720"
         color_texto = "#000000"
         color_fondo2 = "#610000"
@@ -184,6 +200,9 @@ with st.sidebar:
         color_boton_texto = "#000000"
         color_fondo_pameter = "#352F30"
         color_texto_pameter = "#FFFFFF"
+        color_fondo_ar = "#7C3131"
+        color_arriba="#9c0720"
+        st.image("scr/pages/resources/estres.jpg", width=300)
 st.markdown(
     f"""
     <style>
@@ -215,11 +234,112 @@ st.markdown(
     background-color: {color_boton};
     color: {color_boton_texto};
     }}
+    [data-testid="stFileUploader"] {{
+    background-color: {color_fondo_ar};
     }}
+    [data-testid="stHeader"] {{
+    background-color: {color_arriba};
+    }}
+    [data-testid="stFileUploaderDropzone"] {{
+    background-color: {color_fondo_ar};
+    border: 2px solid {color_fondo2};
+    border-radius: 10px;
+    }}
+    [data-testid="stFileUploaderDropzone"] button {{
+    background-color: {color_boton};
+    color: {color_boton_texto};
+    }}
+}}
     </style>
     """,
     unsafe_allow_html=True
 )
+
+#MODO RAFAGA, YEI
+if "modo_rafaga" not in st.session_state:
+    st.session_state["modo_rafaga"] = False
+def cambiar_theme(): 
+    st.session_state["modo_rafaga"] = st.session_state["rg_checkbox"] 
+if "rg_checkbox" not in st.session_state:
+    st.session_state["rg_checkbox"] = st.session_state["modo_rafaga"]
+with st.sidebar:
+    st.title("seleccione aquí para el activar el modo rafaga")
+    color_fondo="000000" #valores feiks para poder cambiar el color de la pag, si no se hace esto, el streamlit no deja cambiar el color de la pag
+    color_texto="000000"
+    color_fondo2="000000"
+    color_fondo3="000000"
+    color_boton="000000"
+    color_boton_texto="000000"
+    color_fondo_pameter="000000"
+    color_texto_pameter="000000"
+    color_fondo_ar="000000"
+    color_arriba="000000"
+    st.checkbox("Modo rafaga", key="rg_checkbox", on_change=cambiar_theme)
+    if st.session_state["modo_rafaga"]:
+        color_fondo = "#D8F3DC"
+        color_texto = "#000000"
+        color_fondo2 = "#B7E4C7"
+        color_fondo3 = "#74C69D"
+        color_boton = "#2D6A4F"
+        color_boton_texto = "#FFFFFF"
+        color_fondo_pameter = "#EAF7ED"
+        color_texto_pameter = "#081C15"
+        color_fondo_ar = "#B7E4C7"
+        color_arriba="#D8F3DC"
+        st.image("scr/pages/resources/amor.jpg", width=300)
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        primaryColor: {color_fondo3};
+        background-color: {color_fondo};
+        color: {color_texto};
+        [data-testid="stSidebar"] {{
+        background-color: {color_fondo2};
+    }}
+    .stButton > button {{
+        background-color: {color_boton};
+        color: {color_boton_texto};
+        border-radius: 20px;
+        border: 2px solid white;
+        font-weight: bold;
+    }}
+
+    .stButton > button:hover {{
+        background-color: {color_fondo};
+        color: {color_texto};
+    }}
+    [data-testid="stNumberInput"] input {{
+        background-color: {color_fondo_pameter};
+        color: {color_texto_pameter};
+    
+    }}
+    [data-testid="stNumberInput"] button {{
+    background-color: {color_boton};
+    color: {color_boton_texto};
+    }}
+    [data-testid="stFileUploader"] {{
+    background-color: {color_fondo_ar};
+    }}
+    [data-testid="stHeader"] {{
+    background-color: {color_arriba};
+    }}
+    [data-testid="stFileUploaderDropzone"] {{
+    background-color: {color_fondo_ar};
+    border: 2px solid {color_fondo2};
+    border-radius: 10px;
+    }}
+    [data-testid="stFileUploaderDropzone"] button {{
+    background-color: {color_boton};
+    color: {color_boton_texto};
+    }}
+}}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
 
 #BOTON PA ELIMINAR
 if "show_delete" not in st.session_state:
@@ -250,12 +370,12 @@ if st.session_state.get("show_delete", False):
 if st.button("Buscar por id"):
     st.session_state.show_search = True
 
-#BOTON QUE CONTIENE EL COSO DE REVISAR SI EL METODO ESTA O NO
+#BOTON QUE CONTIENE EL COSO DE buscar SI EL METODO ESTA O NO
 if st.session_state.get("show_search", False):
     id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="search_id_input")
     if st.button("esta el sismo?"):
         st.write(arbol.root)
-        result= arbol.review(id)
+        result= arbol.research(id)
         if result==1:
             st.write("Esta en el arbol")
         else:
@@ -265,7 +385,7 @@ if st.session_state.get("show_search", False):
         st.session_state.show_search = False
         st.rerun()
 
-#boton pa revisar si el sismo esta revisado o no
+#boton pa buscar si el sismo esta revisado o no
 if "show_review" not in st.session_state:
     st.session_state.show_review = False
 if st.button("Sismo revisado o no"):
@@ -294,7 +414,58 @@ if st.session_state.get("show_correct", False):
             st.warning ("No se encontró ningún sismo con ese ID.")
         else:
             if st.button("Corregir"):
-                st.selectbox(f"¿Qué desea corregir del sismo con ID: {id}?", options=["Prioridad", "Magnitud", "Profundidad", "Coordenada x" , "coordenada y", "Fecha" , "hora", "Estación", "Estado de atención"])
+                opcion=st.selectbox(f"¿Qué desea corregir del sismo con ID: {id}?", options=["Prioridad", "Magnitud", "Profundidad", "Coordenada x" , "coordenada y", "Fecha" , "hora", "Estación"])
+                if opcion=="Prioridad":
+                    new_sismo=st.number_input("ingrese la nueva prioridad", min_value=1, max_value=10, step=1, key="new_priority_input")
+                elif opcion=="Magnitud":
+                    new_sismo=st.number_input("ingrese la nueva magnitud", min_value=-2.0, max_value=10.0, step=0.1, key="new_magnitude_input")
+                elif opcion=="Profundidad":
+                    new_sismo=st.number_input("ingrese la nueva profundidad", min_value=0.0, max_value=700.0, step=0.1, key="new_depth_input")
+                elif opcion=="Coordenada x":
+                    new_sismo=st.number_input("ingrese la nueva coordenada x", min_value=0, max_value=1000, step=1, key="new_x_input")
+                elif opcion=="Coordenada y":
+                    new_sismo=st.number_input("ingrese la nueva coordenada y", min_value=0, max_value=1000, step=1, key="new_y_input")
+                elif opcion=="Fecha":
+                    new_sismo=st.date_input("ingrese la nueva fecha", max_value=pd.Timestamp.now().date(), key="new_date_input")
+                elif opcion=="hora":
+                    new_sismo=st.time_input("ingrese la nueva hora", key="new_time_input")
+                else:
+                    new_station=st.text_input("ingrese la nueva estación", key="new_station_input")
+                if st.button("corregir todo"):
+                    new=arbol.data_correction(id, new_sismo)
+                    if new is not None:
+                        for sismo_json in st.session_state.data:
+                            if sismo_json["identificador"] == id:
+                                if opcion == "Prioridad":
+                                    sismo_json["prioridad"] = new_priority
+
+                                elif opcion == "Magnitud":
+                                    sismo_json["magnitud"] = new_magnitude
+
+                                elif opcion == "Profundidad":
+                                    sismo_json["profundidad"] = new_depth
+
+                                elif opcion == "Coordenada x":
+                                    sismo_json["coordenadas"][0] = new_x
+
+                                elif opcion == "Coordenada y":
+                                    sismo_json["coordenadas"][1] = new_y
+
+                                elif opcion == "Fecha":
+                                    sismo_json["fecha"] = str(new_date)
+
+                                elif opcion == "hora":
+                                    sismo_json["hora"] = str(new_time)
+
+                                elif opcion == "Estación":
+                                    sismo_json["estación"] = new_station
+
+                                break
+
+        guardar_json(st.session_state.data)
+
+        st.success("Sismo corregido correctamente.")
+        st.rerun()
         cerrar=st.checkbox("cerrar busqueda", key="close_correct_search")
         if cerrar:
             st.session_state.show_correct = False
@@ -391,7 +562,7 @@ if "data" in st.session_state and len(st.session_state.data) > 0:
             "tamaño": False
         },
 
-        size_max=100,
+        size_max=10,
     )
 
     fig.update_geos(
@@ -446,10 +617,6 @@ if "data" in st.session_state and len(st.session_state.data) > 0:
     st.plotly_chart(
         fig,
         use_container_width=True
-    )
-    mapbox=dict(
-        center=dict(lat=4.6243, lon=-74.0636),  # Reemplaza con las coordenadas de tu mapa
-        zoom=10                          # Ajusta el nivel de zoom (0 a 20)
     )
 
 else:
