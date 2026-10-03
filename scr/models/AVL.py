@@ -12,6 +12,7 @@ class AVL:
         self.root = None   #We initialize the root of the tree. At the beginning the tree is empty, so the root is None.
         self.list_deleted=[] #We create a list that stores the IDs of deleted events.
         self.pending_events = []
+        self.list_historic = []
 
     def _get_height(self, node: Optional[Node]) -> int: #We define a helper method that returns the height of a node.
         if node is None: #Is the node missing?
@@ -68,6 +69,11 @@ class AVL:
         for i in range (len(self.list_deleted)):
             if (self.list_deleted[i]== value.get_id()):
                 return None  #We iterate through the IDs of deleted events. If the new event's ID is already in the deleted list, we stop and do not insert it again.
+        
+        for event in self.list_historic:
+            if event.get_id() == value.get_id():
+                return None  #If the new event's ID is already in the historic list, we stop and do not insert it again.
+        
         self.root = self._insert(self.root, value) #This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
         self.stress_mode(False)
 
