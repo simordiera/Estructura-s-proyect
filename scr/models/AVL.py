@@ -80,7 +80,7 @@ class AVL:
                 return None  #If the new event's ID is already in the historic list, we stop and do not insert it again.
         
         self.root = self._insert(self.root, value) #This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
-        self.stress_mode(False)
+        self.stress_mode = False
 
     def _insert(self, node: Optional[Node], value) -> Node:
 
@@ -234,7 +234,11 @@ class AVL:
                 queue.append(node.right)
         return items
 
-
+    def _find_minimum(self, root: Node) -> Node:
+            current = root
+            while current.left is not None:
+                current = current.left
+            return current
 
     def delete(self, id):
         earthquake = self.research(id) #First, you search for the earthquake using its ID.
