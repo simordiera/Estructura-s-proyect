@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from scr.models.Report import Report
-from scr.models.ReportQueue import ReportQueue
+from scr.models.Scenario import Scenario
 
 
 st.set_page_config(
@@ -19,16 +19,16 @@ st.write(
     "cola FIFO antes de procesarlos."
 )
 st.info(
-    "Esta página funciona de manera independiente. No modifica el AVL, el BST "
-    "ni los datos de la página principal."
+    "Los reportes se procesan en el escenario compartido. Esta página no "
+    "modifica directamente la implementación del AVL ni del BST."
 )
 
 
-def get_report_queue():
-    """Crea la cola una sola vez y la conserva entre reruns de Streamlit."""
-    if "visual_report_queue" not in st.session_state:
-        st.session_state.visual_report_queue = ReportQueue()
-    return st.session_state.visual_report_queue
+def get_scenario():
+    """Obtiene el escenario compartido por las páginas de Streamlit."""
+    if "scenario" not in st.session_state:
+        st.session_state.scenario = Scenario()
+    return st.session_state.scenario
 
 
 def get_processed_reports():
@@ -43,26 +43,14 @@ def values_have_one_decimal(value):
     return abs(value * 10 - round(value * 10)) < 0.000001
 
 
-def report_already_exists(identifier, queue, processed_reports):
-    """Evita repetir el mismo reporte en la cola o en los procesados."""
-    for report in queue.get_all():
-        if report.identifier == identifier:
-            return True
-
-    for report in processed_reports:
-        if report.identifier == identifier:
-            return True
-
-    return False
-
-
 def make_datetime_text(selected_date, selected_time):
     """Convierte los controles de fecha y hora al formato ISO del proyecto."""
     selected_datetime = datetime.combine(selected_date, selected_time)
     return selected_datetime.strftime("%Y-%m-%dT%H:%M:%S")
 
 
-queue = get_report_queue()
+scenario = get_scenario()
+queue = scenario.report_queue
 processed_reports = get_processed_reports()
 
 st.header("Añadir un reporte")
@@ -167,9 +155,6 @@ if add_report:
     if report_datetime > current_utc:
         errors.append("La fecha de ocurrencia no puede estar en el futuro UTC.")
 
-    if report_already_exists(identifier, queue, processed_reports):
-        errors.append("Ya existe un reporte con ese identificador en esta página.")
-
     if not report.is_valid():
         errors.append("Los datos del reporte no cumplen los rangos permitidos.")
 
@@ -177,7 +162,7 @@ if add_report:
         for error in errors:
             st.error(error)
     else:
-        queue.add(report)
+        scenario.add_report(report)
         st.success(
             f"El reporte SIS-{identifier:06d} se agregó correctamente "
             f"al final de la cola."
@@ -199,12 +184,12 @@ else:
     )
 
     if st.button("Procesar siguiente reporte"):
-        processed_report = queue.remove()
-        if processed_report is not None:
-            processed_report.status = "Procesado"
+        operation = scenario.process_next_report()
+        if operation is not None:
+            processed_report = operation.report
             processed_reports.append(processed_report)
             st.success(
-                f"Se procesó el reporte SIS-{processed_report.identifier:06d}."
+                operation.result["message"]
             )
             st.rerun()
 

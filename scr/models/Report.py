@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Any
 
+from scr.models.Event import Event
+
 
 @dataclass
 class Report:
@@ -16,6 +18,8 @@ class Report:
     revision: int
     station: str
     status: str = "Pendiente"
+    decision: str = "Pendiente"
+    message: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         """Devuelve los datos en un formato sencillo para la tabla."""
@@ -29,6 +33,8 @@ class Report:
             "Revisión": self.revision,
             "Estación": self.station,
             "Estado": self.status,
+            "Decisión": self.decision,
+            "Mensaje": self.message,
         }
 
     def is_valid(self) -> bool:
@@ -47,3 +53,31 @@ class Report:
             and self.revision >= 1
             and bool(self.station.strip())
         )
+
+    def to_event(self) -> Event:
+        """Convierte el reporte en el tipo de evento que usa el AVL."""
+        return Event(
+            self.identifier,
+            self.magnitude,
+            self.depth,
+            self.epicenter,
+            self.occurrence_datetime,
+            self.station,
+            self.revision,
+        )
+
+    def has_same_event_data(self, event: Event) -> bool:
+        """Compara datos físicos sin usar la estación como criterio."""
+        return (
+            self.magnitude == event.get_magnitude()
+            and self.depth == event.get_depth()
+            and self.epicenter == event.get_epicenter()
+            and self.occurrence_datetime == event.get_datetime().strftime(
+                "%Y-%m-%dT%H:%M:%S"
+            )
+        )
+
+    def finish(self, decision: str, message: str) -> None:
+        self.status = "Procesado"
+        self.decision = decision
+        self.message = message

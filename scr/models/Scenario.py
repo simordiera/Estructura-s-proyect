@@ -379,13 +379,175 @@ class Scenario:
 
 		before = self.snapshot()
 		report = self.report_queue.remove()
+		result = self._process_report_against_tree(report)
+		if hasattr(report, "finish"):
+			report.finish(result["decision"], result["message"])
 		operation = self._save_operation(
 			"procesar_reporte",
-			"Se procesó el primer reporte de la cola.",
+			result["message"],
 			before,
 		)
 		operation.report = report
+		operation.result = result
 		return operation
+
+	def _process_report_against_tree(self, report):
+		"""Clasifica y aplica un reporte usando el AVL actual."""
+		event_id = report.identifier
+		active_node = self.tree.research(event_id)
+		historic_event = next(
+			(
+				event
+				for event in self.tree.list_historic
+				if event.get_id() == event_id
+			),
+			None,
+		)
+
+		if event_id in self.tree.list_deleted:
+			return {
+				"decision": "rechazado",
+				"message": (
+					f"El reporte SIS-{event_id:06d} fue rechazado porque "
+					"el identificador está retirado."
+				),
+				"changed": False,
+			}
+
+		if active_node is not None:
+			existing_event = active_node.value
+			current_revision = existing_event.get_revisions()
+
+			if report.revision < current_revision:
+				return {
+					"decision": "antiguo",
+					"message": (
+						f"El reporte SIS-{event_id:06d} es antiguo. "
+						f"La revisión vigente es {current_revision}."
+					),
+					"changed": False,
+				}
+
+			if report.revision == current_revision:
+				if report.has_same_event_data(existing_event):
+					self._add_station_to_event(
+						existing_event,
+						report.station,
+					)
+					existing_event.set_review(1)
+					return {
+						"decision": "confirmado",
+						"message": (
+							f"El reporte SIS-{event_id:06d} confirmó el evento "
+							f"activo con la revisión {current_revision}."
+						),
+						"changed": True,
+					}
+				return {
+					"decision": "conflicto",
+					"message": (
+						f"El reporte SIS-{event_id:06d} tiene la misma revisión "
+						"pero datos diferentes."
+					),
+					"changed": False,
+				}
+
+			self._apply_report_to_active_event(existing_event, report)
+			return {
+				"decision": "correccion",
+				"message": (
+					f"Se aceptó la corrección del reporte SIS-{event_id:06d} "
+					f"con revisión {report.revision}."
+				),
+				"changed": True,
+			}
+
+		if historic_event is not None:
+			current_revision = historic_event.get_revisions()
+			if report.revision < current_revision:
+				return {
+					"decision": "antiguo",
+					"message": (
+						f"El reporte archivado SIS-{event_id:06d} es antiguo."
+					),
+					"changed": False,
+				}
+			if report.revision == current_revision:
+				if not report.has_same_event_data(historic_event):
+					return {
+						"decision": "conflicto",
+						"message": (
+							f"El reporte archivado SIS-{event_id:06d} tiene "
+							"datos diferentes en la misma revisión."
+						),
+						"changed": False,
+					}
+				return {
+					"decision": "confirmado",
+					"message": (
+						f"El reporte SIS-{event_id:06d} confirmó un evento "
+						"archivado sin reactivarlo."
+					),
+					"changed": False,
+				}
+
+			self.tree.list_historic.remove(historic_event)
+			self.tree.insert(report.to_event())
+			return {
+				"decision": "reactivado",
+				"message": (
+					f"El evento archivado SIS-{event_id:06d} fue reactivado "
+					f"con la revisión {report.revision}."
+				),
+				"changed": True,
+			}
+
+		self.tree.insert(report.to_event())
+		return {
+			"decision": "nuevo",
+			"message": (
+				f"Se creó el evento SIS-{event_id:06d} en el AVL "
+				f"con la revisión {report.revision}."
+			),
+			"changed": True,
+		}
+
+	def _apply_report_to_active_event(self, event, report):
+		"""Actualiza un evento existente sin crear un nodo con el mismo ID."""
+		old_key = event.get_code()
+		new_event = report.to_event()
+		new_key = new_event.get_code()
+
+		if old_key != new_key:
+			self.tree.delete(event.get_id())
+			if event.get_id() in self.tree.list_deleted:
+				self.tree.list_deleted.remove(event.get_id())
+
+		event.set_magnitude(new_event.get_magnitude())
+		event.set_depth(new_event.get_depth())
+		epicenter = new_event.get_epicenter()
+		event.set_epicenter(epicenter[0], epicenter[1])
+		event.set_zone()
+		event.set_priority()
+		event.datetime = new_event.get_datetime()
+		event.set_revisions(new_event.get_revisions())
+		event.set_review(0)
+		event.set_station(new_event.get_station())
+
+		if old_key != new_key:
+			self.tree.insert(event)
+
+	def _add_station_to_event(self, event, station):
+		"""Conserva las estaciones aceptadas sin exigir un tipo concreto."""
+		current_station = event.get_station()
+		if isinstance(current_station, set):
+			current_station.add(station)
+		elif current_station == station:
+			return
+		elif current_station:
+			event.set_station({current_station, station})
+		else:
+			event.set_station(station)
 
 	def advance_clock(self, simulation_clock):
 		before = self.snapshot()
