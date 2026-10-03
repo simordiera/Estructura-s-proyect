@@ -8,10 +8,16 @@ from scr.models.Metrics import Metrics
 
 class AVL:
 
-    def __init__(self):
-        self.root = None   #We initialize the root of the tree. At the beginning the tree is empty, so the root is None.
-        self.list_deleted=[] #We create a list that stores the IDs of deleted events.
-        self.pending_events = []
+    def __init__(self, simulation_clock=None, archive_age_hours=72, stress_mode=False):
+            self.root = None
+            self.list_deleted=[]
+            self.list_historic = []
+            self.retired_ids = set()
+            self.associations = {}
+            self.metrics = Metrics()
+            self.simulation_clock = simulation_clock or datetime.now()
+            self.archive_age_hours = archive_age_hours
+            self.stress_mode = stress_mode
 
     def _get_height(self, node: Optional[Node]) -> int: #We define a helper method that returns the height of a node.
         if node is None: #Is the node missing?
@@ -68,8 +74,13 @@ class AVL:
         for i in range (len(self.list_deleted)):
             if (self.list_deleted[i]== value.get_id()):
                 return None  #We iterate through the IDs of deleted events. If the new event's ID is already in the deleted list, we stop and do not insert it again.
+        
+        for event in self.list_historic:
+            if event.get_id() == value.get_id():
+                return None  #If the new event's ID is already in the historic list, we stop and do not insert it again.
+        
         self.root = self._insert(self.root, value) #This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
-        self.stress_mode(False)
+        self.stress_mode = False
 
     def _insert(self, node: Optional[Node], value) -> Node:
 
@@ -223,7 +234,11 @@ class AVL:
                 queue.append(node.right)
         return items
 
-
+    def _find_minimum(self, root: Node) -> Node:
+            current = root
+            while current.left is not None:
+                current = current.left
+            return current
 
     def delete(self, id):
         earthquake = self.research(id) #First, you search for the earthquake using its ID.
