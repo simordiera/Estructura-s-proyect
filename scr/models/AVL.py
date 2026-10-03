@@ -289,7 +289,6 @@ class AVL:
                 root.right = self._rotate_right(root.right)
             return self._rotate_left(root)
         return root
-
         
     def height(self) -> int:
         if self.root is None: # An empty tree has a height of -1.

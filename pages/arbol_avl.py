@@ -3,10 +3,8 @@ from datetime import datetime
 
 import streamlit as st
 
-from scr.models.AVL import AVL
 from scr.models.Event import Event
-from scr.models.SubtreeArchive import SubtreeArchiveManager
-from scr.models.UndoStack import UndoStack
+from scr.models.Scenario import Scenario
 
 st.title("Visualización del árbol AVL")
 st.caption("Ejemplos del proyecto SismoLab ordenados por la clave (prioridad, magnitud, identificador).")
@@ -118,13 +116,16 @@ def format_events(events):
     return {f"SIS-{event.get_id():06d}": event for event in events}
 
 
-def create_tree():
-    tree = AVL()
+def create_scenario():
+    scenario = Scenario()
     for event in create_example_events():
-        tree.insert(event)
-    if not tree.stress_mode:
-        tree.balance()
-    return tree
+        scenario.create_event(event)
+
+    # Example data is the initial state, not a user action.
+    scenario.undo_stack.undo_actions.clear()
+    scenario.undo_stack.redo_actions.clear()
+    scenario.tree.balance()
+    return scenario
 
 
 # El arbol y la pila sobreviven a los reruns normales de Streamlit.
@@ -132,33 +133,23 @@ if "archive_age_hours" not in st.session_state:
     st.session_state.archive_age_hours = 72
 if "stress_mode" not in st.session_state:
     st.session_state.stress_mode = False
-if "avl_tree" not in st.session_state:
-    st.session_state.avl_tree = create_tree()
-if "avl_archiver" not in st.session_state:
-    st.session_state.avl_archiver = SubtreeArchiveManager(st.session_state.avl_tree)
-if "avl_undo" not in st.session_state:
-    st.session_state.avl_undo = UndoStack()
-if "avl_deleted_ids" not in st.session_state:
-    st.session_state.avl_deleted_ids = set()
-if "avl_restored_ids" not in st.session_state:
-    st.session_state.avl_restored_ids = set()
+if "scenario" not in st.session_state:
+    st.session_state.scenario = create_scenario()
+
+scenario = st.session_state.scenario
+tree = scenario.tree
 
 
 with st.sidebar:
-    st.header("Ejemplo")
-    insertion_order = st.selectbox(
-        "Orden de inserción",
-        ("Orden del archivo", "Clave ascendente", "Clave descendente"),
-    )
-    balance_tree = st.checkbox("Aplicar balanceo AVL", value=True)
-    st.session_state.stress_mode = not balance_tree
-    st.session_state.archive_age_hours = st.number_input(
-        "Antigüedad mínima T (horas)", min_value=1, value=72, step=1
-    )
-    st.session_state.avl_tree.set_simulation_clock(datetime.now())
-    st.session_state.avl_tree.set_archive_age_hours(st.session_state.archive_age_hours)
-    st.session_state.avl_tree.stress_mode = st.session_state.stress_mode
-    archive_candidate = st.session_state.avl_archiver.find_candidate()
+    insertion_order = "Orden del archivo"
+    balance_tree = True
+    st.session_state.stress_mode = False
+    st.session_state.archive_age_hours = 72
+    if tree.archive_age_hours != st.session_state.archive_age_hours:
+        scenario.change_parameters({"T": st.session_state.archive_age_hours})
+    if tree.stress_mode != st.session_state.stress_mode:
+        scenario.set_stress_mode(st.session_state.stress_mode)
+    archive_candidate = scenario.archive_manager.find_candidate()
     if archive_candidate:
         st.info(
             f"Subárbol elegido automáticamente: raíz SIS-{archive_candidate['root_id']:06d} "
@@ -167,33 +158,29 @@ with st.sidebar:
     else:
         st.info("No hay un subárbol elegible para archivar.")
     if st.button("Archivar subárbol", disabled=archive_candidate is None):
-        operation = st.session_state.avl_archiver.archive_subtree(
-            st.session_state.avl_undo
-        )
+        operation = scenario.archive_subtree()
         if operation:
             st.success(
-                f"Se archivaron {len(operation['ids'])} eventos: "
-                f"{', '.join(f'SIS-{event_id:06d}' for event_id in sorted(operation['ids']))}."
+                f"Se archivaron {len(operation.event_ids)} eventos: "
+                f"{', '.join(f'SIS-{event_id:06d}' for event_id in sorted(operation.event_ids))}."
             )
             st.rerun()
     if st.button("Deshacer última acción"):
-        last_operation = st.session_state.avl_undo.peek_undo()
-        undone = False
-        if last_operation and last_operation.get("type") == "eliminar_evento":
-            undone = st.session_state.avl_tree.undo_delete(st.session_state.avl_undo)
-            if undone:
-                restored_id = last_operation["event_id"]
-                st.session_state.avl_deleted_ids.discard(restored_id)
-                st.session_state.avl_restored_ids.add(restored_id)
-        else:
-            undone = st.session_state.avl_archiver.undo_last(st.session_state.avl_undo)
-
-        if undone:
+        undone = scenario.undo()
+        if undone is not None:
             st.success("La última acción se deshizo correctamente.")
             st.rerun()
+        else:
+            st.info("No hay acciones para deshacer.")
+    if st.button("Rehacer última acción"):
+        redone = scenario.redo()
+        if redone is not None:
+            st.success("La última acción se rehizo correctamente.")
+            st.rerun()
+        else:
+            st.info("No hay acciones para rehacer.")
     st.info("Los eventos de ejemplo se reconstruyen en cada cambio para evitar modificar otros estados de la aplicación.")
 
-tree = st.session_state.avl_tree
 events = tree.in_order() or []
 if insertion_order == "Clave ascendente":
     events.sort(key=lambda event: event.get_code())
@@ -236,11 +223,12 @@ for event in events:
         st.write(f"SIS-{event.get_id():06d} | K={event.get_code()}")
     with node_columns[1]:
         if st.button("Eliminar", key=f"avl_delete_{event.get_id()}"):
-            if tree.delete_active(event.get_id(), st.session_state.avl_undo):
-                # La pagina BST consumira este ID y retirara el mismo evento.
-                st.session_state.avl_deleted_ids.add(event.get_id())
+            operation = scenario.delete_event(event.get_id())
+            if operation is not None:
                 st.success(f"SIS-{event.get_id():06d} fue eliminado del AVL activo.")
                 st.rerun()
+            else:
+                st.error(f"No se pudo eliminar SIS-{event.get_id():06d}.")
 
 st.subheader("Histórico")
 historic_events = tree.list_historic
@@ -258,9 +246,10 @@ if historic_events:
     historic_ids = [event.get_id() for event in historic_events]
     selected_historic_id = st.selectbox("Evento histórico para reactivar", historic_ids)
     if st.button("Reactivar evento histórico"):
-        if tree.reactivate_historic(selected_historic_id, st.session_state.avl_undo):
-            st.success(f"SIS-{selected_historic_id:06d} volvió al AVL como evento pendiente.")
-            st.rerun()
+        st.warning(
+            "La reactivación histórica todavía no tiene un método coordinador "
+            "en Scenario.py y no se ejecutará directamente sobre AVL.py."
+        )
 else:
     st.info("No hay eventos archivados.")
 
