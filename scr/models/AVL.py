@@ -77,8 +77,9 @@ class AVL:
         
         for event in self.list_historic:
             if event.get_id() == value.get_id():
-                return None  #If the new event's ID is already in the historic list, we stop and do not insert it again.
-        
+                self.same_archive(value, event)  #If the new event's ID is already in the historic list, we stop and do not insert it again.
+                return None
+            
         self.root = self._insert(self.root, value) #This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
         self.stress_mode = False
 
@@ -544,4 +545,46 @@ class AVL:
         else:
             return False
 
-        
+
+    def same_archive(self, value, event):
+        return self._same_archive(value, event)
+
+    def _same_archive(self, value, event):
+        existing_event = event
+        new_event = value
+
+        if (new_event.get_id() == existing_event.get_id() and
+            new_event.get_magnitude() == existing_event.get_magnitude() and
+            new_event.get_depth() == existing_event.get_depth() and
+            new_event.get_epicenter() == existing_event.get_epicenter() and
+            new_event.get_datetime() == existing_event.get_datetime() and
+            new_event.get_station() == existing_event.get_station()):
+
+            existing_event.set_review(1) # Mark the existing earthquake as reviewed.
+            existing_event.set_revisions(existing_event.get_revisions() + 1) # Increase the number of revisions because the event was confirmed.
+            
+            self.list_historic.remove(existing_event)
+            self.root = self._insert(self.root, existing_event)
+            return True
+
+        # If the new event has more revisions, use its information to update the existing event
+        elif new_event.get_revisions() > existing_event.get_revisions():
+            existing_event.set_magnitude(new_event.get_magnitude())
+            existing_event.set_depth(new_event.get_depth())
+            epicenter=new_event.get_epicenter()
+            existing_event.set_epicenter(epicenter[0], epicenter[1])
+            existing_event.set_zone()
+            existing_event.datetime = new_event.get_datetime()
+            existing_event.set_station(new_event.get_station())
+            existing_event.set_priority()
+            existing_event.set_review(0)
+            existing_event.set_revisions(new_event.get_revisions())
+
+            
+            self.list_historic.remove(existing_event)
+            self.root = self._insert(self.root, existing_event)
+
+            return True
+
+        else:
+            return False
