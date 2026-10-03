@@ -59,7 +59,6 @@ tree = AVL()
 tree.insert(event1)
 tree.insert(event2)
 tree.insert(event3)
-tree.delete(300)
 tree.insert(event3)
 tree.insert(event4)
 tree.insert(event5)
@@ -72,6 +71,7 @@ for event in items:
 
 print(" ")
 
+print(tree.node_level(500))
 
 tree.balance()
 
@@ -141,3 +141,7 @@ for event in items:
 
 print(" ")
 
+print(tree.node_level(500)) #nivel del nodo 500
+
+resultado=(tree.budget(3, 500)) #presupuesto del nodo 500
+print(resultado)
