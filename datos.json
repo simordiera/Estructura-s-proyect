@@ -1,28 +1,44 @@
 [
     {
-        "identificador": 1,
-        "magnitud": -2.0,
+        "identificador": 101,
+        "magnitud": 4.5,
         "coordenadas": [
-            0,
-            0
+            -75.6811,
+            5.0689
         ],
-        "fecha": "2026-10-03",
-        "hora": "00:03:00",
-        "lugar_reporte": "manizales",
-        "estación": "peri",
-        "profundidad": 0.0
+        "fecha": "2026-09-20",
+        "hora": "14:30:00",
+        "lugar_reporte": "Manizales",
+        "estación": "Estación 01",
+        "estado_atención": "Atendido",
+        "profundidad": 10.5
     },
     {
-        "identificador": 2,
-        "magnitud": -2.0,
+        "identificador": 102,
+        "magnitud": 3.8,
         "coordenadas": [
-            0,
-            0
+            -75.69,
+            5.05
         ],
-        "fecha": "2026-10-03",
-        "hora": "16:07:00",
-        "lugar_reporte": "",
-        "estación": "",
-        "profundidad": 0.0
+        "fecha": "2026-09-21",
+        "hora": "09:15:00",
+        "lugar_reporte": "Villamaría",
+        "estación": "Estación 02",
+        "estado_atención": "Pendiente",
+        "profundidad": 25.0
+    },
+    {
+        "identificador": 103,
+        "magnitud": 5.1,
+        "coordenadas": [
+            -75.65,
+            5.1
+        ],
+        "fecha": "2026-09-22",
+        "hora": "18:45:00",
+        "lugar_reporte": "Chinchiná",
+        "estación": "Estación 03",
+        "estado_atención": "Atendido",
+        "profundidad": 40.2
     }
 ]
