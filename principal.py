@@ -6,6 +6,7 @@ import os
 from scr.models.Event import Event
 from scr.models.Archivo import guardar_json , cargar_json, RUTA
 from scr.models.AVL import AVL
+from scr.models.BST import BST
 from scr.models.Scenario import Scenario
 #NO FUN IONA NADA, GAS, NO ME TOQUEN EL CODIGO
 
@@ -30,12 +31,27 @@ if "show_upload" not in st.session_state:
     st.session_state.show_upload = False
 
 
+def reconstruir_bst(data):
+    nuevo_bst = BST()
 
+    for sismo in data:
+        evento = Event(
+            sismo["identificador"],
+            sismo["magnitud"],
+            sismo["profundidad"],
+            tuple(sismo["coordenadas"]),
+            f'{sismo["fecha"]}T{sismo["hora"]}',
+            sismo["estación"],
+        )
+        nuevo_bst.insert(evento)
+
+    return nuevo_bst
 # CARGAR LOS DATOS DEL JSON
 if "data" not in st.session_state:
         st.session_state.data = cargar_json()
-st.write("Ruta del JSON:", os.path.abspath(RUTA))
-st.write("Cantidad de datos cargados:", len(st.session_state.data))
+
+if "arbol_bst" not in st.session_state:
+    st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
 
 # CREAR Y RECONSTRUIR EL AVL
 if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or []) == 0:
@@ -50,16 +66,11 @@ if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or [
             f'{sismo["fecha"]}T{sismo["hora"]}',
             sismo["estación"],
         )
-        st.write("Creando evento:", evento.get_id())
         st.session_state.arbol.insert(evento)
-        st.write(
-            "Eventos en AVL después de insertar:",
-            len(st.session_state.arbol.in_order() or []))
 
 # RECUPERAR EL ARBOL
 arbol = st.session_state.arbol
-st.write("Datos cargados desde JSON:", len(st.session_state.data))
-st.write("Eventos dentro del AVL:", len(arbol.in_order() or []))
+arbol_bst = st.session_state.arbol_bst
 if "scenario" not in st.session_state:
     st.session_state.scenario = Scenario()
 
@@ -119,6 +130,7 @@ if st.session_state.show_options:
         )
 
                     st.session_state.arbol.insert(evento)
+                st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
                 arbol=st.session_state.arbol
                 st.success("Archivo cargado correctamente :)")
                 st.write(st.session_state.data)
@@ -166,7 +178,7 @@ if st.session_state.show_options:
                 })
 
                         guardar_json(st.session_state.data)
-
+                        st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
                         st.session_state.show_options = False
                         st.session_state.show_form = False
                         st.rerun()
@@ -360,6 +372,7 @@ if st.session_state.get("show_delete", False):
     ]
 
             guardar_json(st.session_state.data)
+            st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
 
     cerrar=st.checkbox("cerrar busqueda", key="close_delete_search")
     if cerrar:
@@ -376,7 +389,7 @@ if st.session_state.get("show_search", False):
     if st.button("esta el sismo?"):
         st.write(arbol.root)
         result= arbol.research(id)
-        if result==1:
+        if result is not None:
             st.write("Esta en el arbol")
         else:
             st.write("no esta en el arbol")
@@ -396,82 +409,124 @@ if st.session_state.get("show_review", False):
         sismo=arbol.research(id)
         if sismo is None:
             st.warning("No se encontró ningún sismo con ese ID.")
-        cerrar=st.checkbox("cerrar busqueda", key="close_review_search")
-        if cerrar:
-            st.session_state.show_review = False
-            st.rerun()
+        else:
+            review=sismo.value.get_review()
+            if review==0:
+                st.write("El sismo con ID:", sismo.value.get_id(), "no ha sido revisado.")
+            else:
+                st.write("El sismo con ID:", sismo.value.get_id(), "ha sido revisado.")
+    cerrar=st.checkbox("cerrar busqueda", key="close_review_search")
+    if cerrar:
+        st.session_state.show_review = False
+        st.rerun()
 
 #boton pa corregir un sismito
 if "show_correct" not in st.session_state:
     st.session_state.show_correct = False
+if "show_correct_2" not in st.session_state:
+    st.session_state.show_correct_2 = False
+if "sismo_encontrado" not in st.session_state:
+    st.session_state.sismo_encontrado = False
 if st.button("Corregir un sismo"):
     st.session_state.show_correct = True
-if st.session_state.get("show_correct", False):
-    id=st.number_input("ingrese el numero identificador del sismo que desea corregir", step=1, min_value=1, max_value=999999, key="correct_id_input")
-    if st.button("buscar"):
-        sismo=arbol.research(id)
-        if sismo is None:
-            st.warning ("No se encontró ningún sismo con ese ID.")
-        else:
-            if st.button("Corregir"):
-                opcion=st.selectbox(f"¿Qué desea corregir del sismo con ID: {id}?", options=["Prioridad", "Magnitud", "Profundidad", "Coordenada x" , "coordenada y", "Fecha" , "hora", "Estación"])
-                if opcion=="Prioridad":
-                    new_sismo=st.number_input("ingrese la nueva prioridad", min_value=1, max_value=10, step=1, key="new_priority_input")
-                elif opcion=="Magnitud":
-                    new_sismo=st.number_input("ingrese la nueva magnitud", min_value=-2.0, max_value=10.0, step=0.1, key="new_magnitude_input")
-                elif opcion=="Profundidad":
-                    new_sismo=st.number_input("ingrese la nueva profundidad", min_value=0.0, max_value=700.0, step=0.1, key="new_depth_input")
-                elif opcion=="Coordenada x":
-                    new_sismo=st.number_input("ingrese la nueva coordenada x", min_value=0, max_value=1000, step=1, key="new_x_input")
-                elif opcion=="Coordenada y":
-                    new_sismo=st.number_input("ingrese la nueva coordenada y", min_value=0, max_value=1000, step=1, key="new_y_input")
-                elif opcion=="Fecha":
-                    new_sismo=st.date_input("ingrese la nueva fecha", max_value=pd.Timestamp.now().date(), key="new_date_input")
-                elif opcion=="hora":
-                    new_sismo=st.time_input("ingrese la nueva hora", key="new_time_input")
-                else:
-                    new_station=st.text_input("ingrese la nueva estación", key="new_station_input")
-                if st.button("corregir todo"):
-                    new=arbol.data_correction(id, new_sismo)
-                    if new is not None:
-                        for sismo_json in st.session_state.data:
-                            if sismo_json["identificador"] == id:
-                                if opcion == "Prioridad":
-                                    sismo_json["prioridad"] = new_priority
-
-                                elif opcion == "Magnitud":
-                                    sismo_json["magnitud"] = new_magnitude
-
-                                elif opcion == "Profundidad":
-                                    sismo_json["profundidad"] = new_depth
-
-                                elif opcion == "Coordenada x":
-                                    sismo_json["coordenadas"][0] = new_x
-
-                                elif opcion == "Coordenada y":
-                                    sismo_json["coordenadas"][1] = new_y
-
-                                elif opcion == "Fecha":
-                                    sismo_json["fecha"] = str(new_date)
-
-                                elif opcion == "hora":
-                                    sismo_json["hora"] = str(new_time)
-
-                                elif opcion == "Estación":
-                                    sismo_json["estación"] = new_station
-
-                                break
-
-        guardar_json(st.session_state.data)
-
-        st.success("Sismo corregido correctamente.")
-        st.rerun()
-        cerrar=st.checkbox("cerrar busqueda", key="close_correct_search")
-        if cerrar:
+    st.session_state.show_correct_2 = False
+    st.session_state.sismo_encontrado = False
+if st.session_state.show_correct:
+    id = st.number_input("Ingrese el número identificador del sismo que desea corregir",step=1,min_value=1,max_value=999999,key="correct_id_input")
+    sismo = arbol.research(id)
+    if sismo is None:
+        st.warning("No se encontró ningún sismo con ese ID.")
+        st.session_state.sismo_encontrado = False
+    else:
+        st.session_state.sismo_encontrado = True
+        if st.button("Corregir"):
+            st.session_state.show_correct_2 = True
+if st.session_state.show_correct_2:
+    opcion = st.selectbox(
+        f"¿Qué desea corregir del sismo con ID: {id}?",
+        options=["Magnitud","Profundidad","Coordenada x","Coordenada y","Fecha","hora","Estación"])
+    if opcion == "Magnitud":
+        new_sismo = st.number_input("Ingrese la nueva magnitud",min_value=-2.0,max_value=10.0,step=0.1,key="new_magnitude_input")
+    elif opcion == "Profundidad":
+        new_sismo = st.number_input("Ingrese la nueva profundidad",min_value=0.0,max_value=700.0,step=0.1,key="new_depth_input")
+    elif opcion == "Coordenada x":
+        new_sismo = st.number_input("Ingrese la nueva coordenada x",min_value=0,max_value=1000,step=1,key="new_x_input")
+    elif opcion == "Coordenada y":
+        new_sismo = st.number_input("Ingrese la nueva coordenada y",min_value=0,max_value=1000,step=1,key="new_y_input")
+    elif opcion == "Fecha":
+        new_sismo = st.date_input("Ingrese la nueva fecha",max_value=pd.Timestamp.now().date(),key="new_date_input")
+    elif opcion == "hora":
+        new_sismo = st.time_input("Ingrese la nueva hora",key="new_time_input")
+    elif opcion == "Estación":
+        new_station = st.text_input("Ingrese la nueva estación",key="new_station_input")
+    if st.button("Corregir definitivamente"):
+        sismo_json_actual = next(
+            s for s in st.session_state.data
+            if s["identificador"] == id
+        )
+        if opcion == "Magnitud":
+            new_info = {"magnitud": new_sismo}
+        elif opcion == "Profundidad":
+            new_info = {"profundidad": new_sismo}
+        elif opcion == "Coordenada x":
+            new_info = {
+                "epicentro": (
+                    new_sismo,sismo_json_actual["coordenadas"][1])
+            }
+        elif opcion == "Coordenada y":
+            new_info = {
+                "epicentro": (
+                    sismo_json_actual["coordenadas"][0],new_sismo)
+            }
+        elif opcion == "Fecha":
+            new_info = {
+                "fecha y hora": f"{new_sismo}T{sismo_json_actual['hora']}"
+            }
+        elif opcion == "hora":
+            new_info = {
+                "fecha y hora": f"{sismo_json_actual['fecha']}T{new_sismo}"
+            }
+        elif opcion == "Estación":
+            new_info = {"estacion": new_station}
+        new = arbol.data_correction(id, new_info)
+        if new is not None:
+            for sismo_json in st.session_state.data:
+                if sismo_json["identificador"] == id:
+                    if opcion == "Magnitud":
+                        sismo_json["magnitud"] = new_sismo
+                    elif opcion == "Profundidad":
+                        sismo_json["profundidad"] = new_sismo
+                    elif opcion == "Coordenada x":
+                        sismo_json["coordenadas"][0] = new_sismo
+                    elif opcion == "Coordenada y":
+                        sismo_json["coordenadas"][1] = new_sismo
+                    elif opcion == "Fecha":
+                        sismo_json["fecha"] = str(new_sismo)
+                    elif opcion == "hora":
+                        sismo_json["hora"] = str(new_sismo)
+                    elif opcion == "Estación":
+                        sismo_json["estación"] = new_station
+                    break
+            guardar_json(st.session_state.data)
+            st.session_state.arbol_bst = reconstruir_bst(
+                st.session_state.data
+            )
+            st.success("¡Sismo corregido correctamente!")
             st.session_state.show_correct = False
+            st.session_state.show_correct_2 = False
+            st.session_state.sismo_encontrado = False
             st.rerun()
+        else:
+            st.warning("No se pudo corregir el sismo.")
+if st.session_state.show_correct:
+    cerrar = st.checkbox("Cerrar búsqueda",key="close_correct_search")
+    if cerrar:
+        st.session_state.show_correct = False
+        st.session_state.show_correct_2 = False
+        st.session_state.sismo_encontrado = False
+        st.rerun()
 
-#checkbox pa altura de nodo que busque
+#botoncito pa altura de nodo que busque
 if "show_height" not in st.session_state:
     st.session_state.show_height = False
 if st.button("Altura del nodo"):
@@ -485,13 +540,13 @@ if st.session_state.get("show_height", False):
         else:
             height=sismo.height
             st.write("Altura del nodo:")
-            st.write(f"ID: {sismo.get_id()}, Altura: {height}")
+            st.write(f"ID: {sismo.value.get_id()}, Altura: {height}")
         cerrar=st.checkbox("cerrar busqueda", key="close_height_search")
         if cerrar:
             st.session_state.show_height = False
             st.rerun()
 
-#checbox pa nivel de nodo
+#botoncito pa nivel de nodo
 if "show_level" not in st.session_state:
     st.session_state.show_level = False
 if st.button("Nivel del nodo"):
@@ -503,13 +558,13 @@ if st.session_state.get("show_level", False):
         if sismo is None:
             st.warning("No se encontró ningún sismo con ese ID.")
         else:
-            level=sismo.level
+            level=arbol.node_level(id)
             st.write("Nivel del nodo:")
-            st.write(f"ID: {sismo.get_id()}, Nivel: {level}")
-        cerrar=st.checkbox("cerrar busqueda", key="close_level_search")
-        if cerrar:
-            st.session_state.show_level = False
-            st.rerun()
+            st.write(f"ID: {sismo.value.get_id()}, Nivel: {level}")
+    cerrar=st.checkbox("cerrar busqueda", key="close_level_search")
+    if cerrar:
+        st.session_state.show_level = False
+        st.rerun()
 
 
 #aparece en el menu cuando se meten en la pag prin

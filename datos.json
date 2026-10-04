@@ -1,16 +1,28 @@
 [
     {
-        "identificador": 7,
-        "magnitud": 4.0,
+        "identificador": 1,
+        "magnitud": -2.0,
         "coordenadas": [
-            5,
-            5
+            0,
+            0
         ],
-        "fecha": "2026-10-02",
-        "hora": "21:26:00",
+        "fecha": "2026-10-03",
+        "hora": "00:03:00",
+        "lugar_reporte": "manizales",
+        "estación": "peri",
+        "profundidad": 0.0
+    },
+    {
+        "identificador": 2,
+        "magnitud": -2.0,
+        "coordenadas": [
+            0,
+            0
+        ],
+        "fecha": "2026-10-03",
+        "hora": "16:07:00",
         "lugar_reporte": "",
         "estación": "",
-        "estado_atención": "",
-        "profundidad": 5.0
+        "profundidad": 0.0
     }
 ]

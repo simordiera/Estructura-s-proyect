@@ -4,6 +4,7 @@ import streamlit as st
 
 from scr.models.BST import BST
 from scr.models.Event import Event
+from scr.models.Archivo import cargar_json
 
 
 st.title("Visualización del árbol BST")
@@ -142,31 +143,24 @@ with st.sidebar:
     )
     st.info("El AVL es la fuente de datos. Las operaciones se realizan desde la página AVL.")
 
-tree = st.session_state.bst_tree
+if "data" not in st.session_state:
+    st.session_state.data = cargar_json()
 
-# El BST solo compara la topologia del mismo conjunto de eventos del AVL.
-avl_state = st.session_state.get("avl_async_state")
-if avl_state is not None:
-    target_events = list(avl_state["active_events"])
-    if insertion_order == "Clave ascendente":
-        target_events.sort(key=lambda event: event.get_code())
-    elif insertion_order == "Clave descendente":
-        target_events.sort(key=lambda event: event.get_code(), reverse=True)
+tree = BST()
 
-    tree = BST()
-    for target_event in target_events:
-        tree.insert(deepcopy(target_event))
-    st.session_state.bst_tree = tree
+for sismo in st.session_state.data:
+    evento = Event(
+        sismo["identificador"],
+        sismo["magnitud"],
+        sismo["profundidad"],
+        tuple(sismo["coordenadas"]),
+        f'{sismo["fecha"]}T{sismo["hora"]}',
+        sismo["estación"],
+    )
 
-    tree.list_historic = deepcopy(avl_state["historic_events"])
-    tree.retired_ids = set(avl_state["retired_ids"])
-    tree.associations = deepcopy(avl_state["associations"])
-    tree.metrics.restore(avl_state["metrics"])
-    tree.simulation_clock = avl_state["simulation_clock"]
-    tree.archive_age_hours = avl_state["archive_age_hours"]
-else:
-    st.info("Abra primero la página AVL para cargar los eventos del escenario.")
-events = tree.in_order() or []
+    tree.insert(evento)
+
+st.session_state.arbol_bst = tree
 
 st.subheader("Arbol activo")
 st.info("Este árbol muestra la estructura BST sin balanceo, para compararla con el AVL.")
