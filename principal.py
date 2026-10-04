@@ -8,6 +8,7 @@ from scr.models.Archivo import guardar_json , cargar_json, RUTA
 from scr.models.AVL import AVL
 from scr.models.BST import BST
 from scr.models.Scenario import Scenario
+import plotly.graph_objects as go
 #NO FUN IONA NADA, GAS, NO ME TOQUEN EL CODIGO
 
 #configuracion visual de la pag
