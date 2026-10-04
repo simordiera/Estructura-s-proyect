@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-#ESTE TAMPOCO M LO TOQUEN
 
 
 color_fondo = "#6e9693"
@@ -63,15 +62,9 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-st.title("tabla de los sismos creados", text_alignment="center")
-if "data" not in st.session_state:
-    st.session_state.data = []
+st.title("tabla de los sismos revisados", text_alignment="center")
 
-datos = st.session_state.data
 
-df = pd.DataFrame(datos)
 
-event = st.dataframe(
-    df,
-    key="dataframe",
-)
+st.title("tabla de los sismos sin revisar", text_alignment="center")
+

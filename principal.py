@@ -2,9 +2,13 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import json
+import os
 from scr.models.Event import Event
-from scr.models.Archivo import guardar_json , cargar_json
+from scr.models.Archivo import guardar_json , cargar_json, RUTA
 from scr.models.AVL import AVL
+from scr.models.BST import BST
+from scr.models.Scenario import Scenario
+import plotly.graph_objects as go
 #NO FUN IONA NADA, GAS, NO ME TOQUEN EL CODIGO
 
 #configuracion visual de la pag
@@ -28,20 +32,10 @@ if "show_upload" not in st.session_state:
     st.session_state.show_upload = False
 
 
-# CARGAR LOS DATOS DEL JSON
-if "data" not in st.session_state:
-    try:
-        st.session_state.data = cargar_json()
-    except FileNotFoundError:
-        st.session_state.data = []
+def reconstruir_bst(data):
+    nuevo_bst = BST()
 
-# CREAR Y RECONSTRUIR EL AVL
-if "arbol" not in st.session_state:
-
-    st.session_state.arbol = AVL()
-
-    for sismo in st.session_state.data:
-
+    for sismo in data:
         evento = Event(
             sismo["identificador"],
             sismo["magnitud"],
@@ -49,14 +43,39 @@ if "arbol" not in st.session_state:
             tuple(sismo["coordenadas"]),
             f'{sismo["fecha"]}T{sismo["hora"]}',
             sismo["estación"],
-            sismo["estado_atención"]
         )
+        nuevo_bst.insert(evento)
 
+    return nuevo_bst
+# CARGAR LOS DATOS DEL JSON
+if "data" not in st.session_state:
+        st.session_state.data = cargar_json()
+
+if "arbol_bst" not in st.session_state:
+    st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
+
+# CREAR Y RECONSTRUIR EL AVL
+if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or []) == 0:
+    st.session_state.arbol = AVL()
+
+    for sismo in st.session_state.data:
+        evento = Event(
+            sismo["identificador"],
+            sismo["magnitud"],
+            sismo["profundidad"],
+            tuple(sismo["coordenadas"]),
+            f'{sismo["fecha"]}T{sismo["hora"]}',
+            sismo["estación"],
+        )
         st.session_state.arbol.insert(evento)
 
 # RECUPERAR EL ARBOL
 arbol = st.session_state.arbol
+arbol_bst = st.session_state.arbol_bst
+if "scenario" not in st.session_state:
+    st.session_state.scenario = Scenario()
 
+st.session_state.scenario.tree = st.session_state.arbol
 # MOSTRAR INFORMACIÓN
 recorrido = arbol.in_order()
 #Markdown sirve pa utilizar css y html, o para mostrar texto, el unsafe permite que el streamlit permita el css
@@ -69,6 +88,8 @@ div.stButton > button {
     font-size: 18px;
     font-weight: bold;
     background-color:#77ACA2;
+    border: 2px solid white;
+
 }
 </style>
 """, unsafe_allow_html=True)
@@ -94,7 +115,12 @@ if st.session_state.show_options:
 
             if uploaded_file is not None:
                 data = json.load(uploaded_file)
-                for sismo in data:
+                st.session_state.data = data
+                guardar_json(st.session_state.data)
+                # RECONSTRUIR EL AVL
+                st.session_state.arbol = AVL()
+
+                for sismo in st.session_state.data:
                     evento = Event(
                     sismo["identificador"],
                     sismo["magnitud"],
@@ -102,18 +128,17 @@ if st.session_state.show_options:
                     tuple(sismo["coordenadas"]),
                     f'{sismo["fecha"]}T{sismo["hora"]}',
                     sismo["estación"],
-                    sismo["estado_atención"]
         )
 
-                    arbol.insert(evento)
-                guardar_json(data)
+                    st.session_state.arbol.insert(evento)
+                st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
+                arbol=st.session_state.arbol
                 st.success("Archivo cargado correctamente :)")
-                st.session_state.data = data
                 st.write(st.session_state.data)
                 st.success("Archivo cargado correctamente :)")
                 #st.session_state.show_options = False
                 #st.session_state.show_upload = False
-                #st.rerun()
+                st.rerun()
 
     #segundo boton para llenar los datos manalmente(tengo que )
     with col2:
@@ -123,27 +148,24 @@ if st.session_state.show_options:
 
             with st.form("my_form"):
                 st.title("LLena la información del sismo :)")
-                id = st.number_input("ingrese el identificador",step=1,min_value=1,max_value=999999)
+                id = st.number_input("ingrese el identificador",step=1,min_value=1,max_value=999999, key="id_input")
                 magnitude = st.number_input("ingrese la magnitud",min_value=-2.0,max_value=10.0,step=0.1)
                 depth = st.number_input("ingrese la profundidad",min_value=0.0,max_value=700.0,step=0.1)
-                x = st.number_input("coordenada X",min_value=-180,max_value=180)
-                y = st.number_input("coordenada Y", min_value=-90,  max_value=90)
-                date = st.date_input("fecha")
+                x = st.number_input("coordenada X",min_value=0,max_value=1000)
+                y = st.number_input("coordenada Y", min_value=0,  max_value=1000)
+                date = st.date_input("fecha", max_value=pd.Timestamp.now().date())
                 time = st.time_input("hora")
-                attention_status = st.text_input("estado de atención")
                 stations = st.text_input("estaciones")
                 report_location = st.text_input("lugar del reporte")
                 submitted = st.form_submit_button("Subir archivo")
 
                 if submitted:
-                    if arbol.review(id) == 1:
+                    if arbol.research(id) is not None:
                         st.error("El sismo ya esta registrado")
                     else:
                         fecha_hora = f"{date}T{time}"
                         evento = Event(id,magnitude,depth,(x, y),fecha_hora,stations)
-                        evento.set_review(
-                            1 if attention_status.lower() == "revisado" else 0
-                        )
+                        
                         arbol.insert(evento)
                         st.session_state.data.append ({
                             "identificador": id,
@@ -153,22 +175,192 @@ if st.session_state.show_options:
                             "hora": str(time),
                             "lugar_reporte": report_location,
                             "estación":stations,
-                            "estado_atención":attention_status,
                             "profundidad":depth,
                 })
 
                         guardar_json(st.session_state.data)
-
+                        st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
                         st.session_state.show_options = False
                         st.session_state.show_form = False
-                        #  st.rerun()
+                        st.rerun()
+#cambiar de color la pag si hay mas de 10 sismos, pa que se vea mas dramatico
+if "modo_estres" not in st.session_state:
+    st.session_state["modo_estres"] = False
+def cambiar_theme(): 
+    st.session_state["modo_estres"] = st.session_state["stress_checkbox"] 
+if "stress_checkbox" not in st.session_state:
+    st.session_state["stress_checkbox"] = st.session_state["modo_estres"]
+#MODOOO ESTREEEES
+with st.sidebar:
+    st.title("seleccione aquí para el activar el modo estres")
+    color_fondo="000000" #valores feiks para poder cambiar el color de la pag, si no se hace esto, el streamlit no deja cambiar el color de la pag
+    color_texto="000000"
+    color_fondo2="000000"
+    color_fondo3="000000"
+    color_boton="000000"
+    color_boton_texto="000000"
+    color_fondo_pameter="000000"
+    color_texto_pameter="000000"
+    color_fondo_ar="000000"
+    color_arriba="000000"
+    st.checkbox("Modo estres", key="stress_checkbox", on_change=cambiar_theme)
+    if st.session_state["modo_estres"]:
+        color_fondo = "#9c0720"
+        color_texto = "#000000"
+        color_fondo2 = "#610000"
+        color_fondo3 = "#82303C"
+        color_boton = "#734141"
+        color_boton_texto = "#000000"
+        color_fondo_pameter = "#352F30"
+        color_texto_pameter = "#FFFFFF"
+        color_fondo_ar = "#7C3131"
+        color_arriba="#9c0720"
+        st.image("scr/pages/resources/estres.jpg", width=300)
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        primaryColor: {color_fondo3};
+        background-color: {color_fondo};
+        color: {color_texto};
+        [data-testid="stSidebar"] {{
+        background-color: {color_fondo2};
+    }}
+    .stButton > button {{
+        background-color: {color_boton};
+        color: {color_boton_texto};
+        border-radius: 20px;
+        border: 2px solid white;
+        font-weight: bold;
+    }}
+
+    .stButton > button:hover {{
+        background-color: {color_fondo};
+        color: {color_texto};
+    }}
+    [data-testid="stNumberInput"] input {{
+        background-color: {color_fondo_pameter};
+        color: {color_texto_pameter};
+    
+    }}
+    [data-testid="stNumberInput"] button {{
+    background-color: {color_boton};
+    color: {color_boton_texto};
+    }}
+    [data-testid="stFileUploader"] {{
+    background-color: {color_fondo_ar};
+    }}
+    [data-testid="stHeader"] {{
+    background-color: {color_arriba};
+    }}
+    [data-testid="stFileUploaderDropzone"] {{
+    background-color: {color_fondo_ar};
+    border: 2px solid {color_fondo2};
+    border-radius: 10px;
+    }}
+    [data-testid="stFileUploaderDropzone"] button {{
+    background-color: {color_boton};
+    color: {color_boton_texto};
+    }}
+}}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+#MODO RAFAGA, YEI
+if "modo_rafaga" not in st.session_state:
+    st.session_state["modo_rafaga"] = False
+def cambiar_theme(): 
+    st.session_state["modo_rafaga"] = st.session_state["rg_checkbox"] 
+if "rg_checkbox" not in st.session_state:
+    st.session_state["rg_checkbox"] = st.session_state["modo_rafaga"]
+with st.sidebar:
+    st.title("seleccione aquí para el activar el modo rafaga")
+    color_fondo="000000" #valores feiks para poder cambiar el color de la pag, si no se hace esto, el streamlit no deja cambiar el color de la pag
+    color_texto="000000"
+    color_fondo2="000000"
+    color_fondo3="000000"
+    color_boton="000000"
+    color_boton_texto="000000"
+    color_fondo_pameter="000000"
+    color_texto_pameter="000000"
+    color_fondo_ar="000000"
+    color_arriba="000000"
+    st.checkbox("Modo rafaga", key="rg_checkbox", on_change=cambiar_theme)
+    if st.session_state["modo_rafaga"]:
+        color_fondo = "#D8F3DC"
+        color_texto = "#000000"
+        color_fondo2 = "#B7E4C7"
+        color_fondo3 = "#74C69D"
+        color_boton = "#2D6A4F"
+        color_boton_texto = "#FFFFFF"
+        color_fondo_pameter = "#EAF7ED"
+        color_texto_pameter = "#081C15"
+        color_fondo_ar = "#B7E4C7"
+        color_arriba="#D8F3DC"
+        st.image("scr/pages/resources/amor.jpg", width=300)
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        primaryColor: {color_fondo3};
+        background-color: {color_fondo};
+        color: {color_texto};
+        [data-testid="stSidebar"] {{
+        background-color: {color_fondo2};
+    }}
+    .stButton > button {{
+        background-color: {color_boton};
+        color: {color_boton_texto};
+        border-radius: 20px;
+        border: 2px solid white;
+        font-weight: bold;
+    }}
+
+    .stButton > button:hover {{
+        background-color: {color_fondo};
+        color: {color_texto};
+    }}
+    [data-testid="stNumberInput"] input {{
+        background-color: {color_fondo_pameter};
+        color: {color_texto_pameter};
+    
+    }}
+    [data-testid="stNumberInput"] button {{
+    background-color: {color_boton};
+    color: {color_boton_texto};
+    }}
+    [data-testid="stFileUploader"] {{
+    background-color: {color_fondo_ar};
+    }}
+    [data-testid="stHeader"] {{
+    background-color: {color_arriba};
+    }}
+    [data-testid="stFileUploaderDropzone"] {{
+    background-color: {color_fondo_ar};
+    border: 2px solid {color_fondo2};
+    border-radius: 10px;
+    }}
+    [data-testid="stFileUploaderDropzone"] button {{
+    background-color: {color_boton};
+    color: {color_boton_texto};
+    }}
+}}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+
 #BOTON PA ELIMINAR
 if "show_delete" not in st.session_state:
     st.session_state.show_delete = False
 if st.button("Eliminar sismo"):
     st.session_state.show_delete = True
 if st.session_state.get("show_delete", False):
-    id=st.number_input("ingrese el numero identificador del sismo que desea eliminar", step=1, min_value=1, max_value=999999)
+    id=st.number_input("ingrese el numero identificador del sismo que desea eliminar", step=1, min_value=1, max_value=999999, key="delete_id_input")
     if st.button("eliminar definitivamente"):
         result=arbol.delete(id)
         if result is None:
@@ -181,8 +373,9 @@ if st.session_state.get("show_delete", False):
     ]
 
             guardar_json(st.session_state.data)
+            st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
 
-    cerrar=st.checkbox("cerrar busqueda")
+    cerrar=st.checkbox("cerrar busqueda", key="close_delete_search")
     if cerrar:
         st.session_state.show_delete = False
         st.rerun()
@@ -191,24 +384,196 @@ if st.session_state.get("show_delete", False):
 if st.button("Buscar por id"):
     st.session_state.show_search = True
 
-#BOTON QUE CONTIENE EL COSO DE REVISAR SI EL METODO ESTA O NO
+#BOTON QUE CONTIENE EL COSO DE buscar SI EL METODO ESTA O NO
 if st.session_state.get("show_search", False):
-    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999)
+    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="search_id_input")
     if st.button("esta el sismo?"):
-        result= arbol.review(id)
-        if result==1:
+        st.write(arbol.root)
+        result= arbol.research(id)
+        if result is not None:
             st.write("Esta en el arbol")
         else:
             st.write("no esta en el arbol")
-    cerrar=st.checkbox("cerrar busqueda")
+    cerrar=st.checkbox("cerrar busqueda", key="close_search")
     if cerrar:
         st.session_state.show_search = False
         st.rerun()
 
+#boton pa buscar si el sismo esta revisado o no
+if "show_review" not in st.session_state:
+    st.session_state.show_review = False
+if st.button("Sismo revisado o no"):
+    st.session_state.show_review = True
+if st.session_state.get("show_review", False):
+    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="review_id_input")
+    if st.button("revisar"):
+        sismo=arbol.research(id)
+        if sismo is None:
+            st.warning("No se encontró ningún sismo con ese ID.")
+        else:
+            review=sismo.value.get_review()
+            if review==0:
+                st.write("El sismo con ID:", sismo.value.get_id(), "no ha sido revisado.")
+            else:
+                st.write("El sismo con ID:", sismo.value.get_id(), "ha sido revisado.")
+    cerrar=st.checkbox("cerrar busqueda", key="close_review_search")
+    if cerrar:
+        st.session_state.show_review = False
+        st.rerun()
+
+#boton pa corregir un sismito
+if "show_correct" not in st.session_state:
+    st.session_state.show_correct = False
+if "show_correct_2" not in st.session_state:
+    st.session_state.show_correct_2 = False
+if "sismo_encontrado" not in st.session_state:
+    st.session_state.sismo_encontrado = False
+if st.button("Corregir un sismo"):
+    st.session_state.show_correct = True
+    st.session_state.show_correct_2 = False
+    st.session_state.sismo_encontrado = False
+if st.session_state.show_correct:
+    id = st.number_input("Ingrese el número identificador del sismo que desea corregir",step=1,min_value=1,max_value=999999,key="correct_id_input")
+    sismo = arbol.research(id)
+    if sismo is None:
+        st.warning("No se encontró ningún sismo con ese ID.")
+        st.session_state.sismo_encontrado = False
+    else:
+        st.session_state.sismo_encontrado = True
+        if st.button("Corregir"):
+            st.session_state.show_correct_2 = True
+if st.session_state.show_correct_2:
+    opcion = st.selectbox(
+        f"¿Qué desea corregir del sismo con ID: {id}?",
+        options=["Magnitud","Profundidad","Coordenada x","Coordenada y","Fecha","hora","Estación"])
+    if opcion == "Magnitud":
+        new_sismo = st.number_input("Ingrese la nueva magnitud",min_value=-2.0,max_value=10.0,step=0.1,key="new_magnitude_input")
+    elif opcion == "Profundidad":
+        new_sismo = st.number_input("Ingrese la nueva profundidad",min_value=0.0,max_value=700.0,step=0.1,key="new_depth_input")
+    elif opcion == "Coordenada x":
+        new_sismo = st.number_input("Ingrese la nueva coordenada x",min_value=0,max_value=1000,step=1,key="new_x_input")
+    elif opcion == "Coordenada y":
+        new_sismo = st.number_input("Ingrese la nueva coordenada y",min_value=0,max_value=1000,step=1,key="new_y_input")
+    elif opcion == "Fecha":
+        new_sismo = st.date_input("Ingrese la nueva fecha",max_value=pd.Timestamp.now().date(),key="new_date_input")
+    elif opcion == "hora":
+        new_sismo = st.time_input("Ingrese la nueva hora",key="new_time_input")
+    elif opcion == "Estación":
+        new_station = st.text_input("Ingrese la nueva estación",key="new_station_input")
+    if st.button("Corregir definitivamente"):
+        sismo_json_actual = next(
+            s for s in st.session_state.data
+            if s["identificador"] == id
+        )
+        if opcion == "Magnitud":
+            new_info = {"magnitud": new_sismo}
+        elif opcion == "Profundidad":
+            new_info = {"profundidad": new_sismo}
+        elif opcion == "Coordenada x":
+            new_info = {
+                "epicentro": (
+                    new_sismo,sismo_json_actual["coordenadas"][1])
+            }
+        elif opcion == "Coordenada y":
+            new_info = {
+                "epicentro": (
+                    sismo_json_actual["coordenadas"][0],new_sismo)
+            }
+        elif opcion == "Fecha":
+            new_info = {
+                "fecha y hora": f"{new_sismo}T{sismo_json_actual['hora']}"
+            }
+        elif opcion == "hora":
+            new_info = {
+                "fecha y hora": f"{sismo_json_actual['fecha']}T{new_sismo}"
+            }
+        elif opcion == "Estación":
+            new_info = {"estacion": new_station}
+        new = arbol.data_correction(id, new_info)
+        if new is not None:
+            for sismo_json in st.session_state.data:
+                if sismo_json["identificador"] == id:
+                    if opcion == "Magnitud":
+                        sismo_json["magnitud"] = new_sismo
+                    elif opcion == "Profundidad":
+                        sismo_json["profundidad"] = new_sismo
+                    elif opcion == "Coordenada x":
+                        sismo_json["coordenadas"][0] = new_sismo
+                    elif opcion == "Coordenada y":
+                        sismo_json["coordenadas"][1] = new_sismo
+                    elif opcion == "Fecha":
+                        sismo_json["fecha"] = str(new_sismo)
+                    elif opcion == "hora":
+                        sismo_json["hora"] = str(new_sismo)
+                    elif opcion == "Estación":
+                        sismo_json["estación"] = new_station
+                    break
+            guardar_json(st.session_state.data)
+            st.session_state.arbol_bst = reconstruir_bst(
+                st.session_state.data
+            )
+            st.success("¡Sismo corregido correctamente!")
+            st.session_state.show_correct = False
+            st.session_state.show_correct_2 = False
+            st.session_state.sismo_encontrado = False
+            st.rerun()
+        else:
+            st.warning("No se pudo corregir el sismo.")
+if st.session_state.show_correct:
+    cerrar = st.checkbox("Cerrar búsqueda",key="close_correct_search")
+    if cerrar:
+        st.session_state.show_correct = False
+        st.session_state.show_correct_2 = False
+        st.session_state.sismo_encontrado = False
+        st.rerun()
+
+#botoncito pa altura de nodo que busque
+if "show_height" not in st.session_state:
+    st.session_state.show_height = False
+if st.button("Altura del nodo"):
+    st.session_state.show_height = True
+if st.session_state.get("show_height", False):
+    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="height_id_input")
+    if st.button("altura"):
+        sismo=arbol.research(id)
+        if sismo is None:
+            st.warning("No se encontró ningún sismo con ese ID.")
+        else:
+            height=sismo.height
+            st.write("Altura del nodo:")
+            st.write(f"ID: {sismo.value.get_id()}, Altura: {height}")
+        cerrar=st.checkbox("cerrar busqueda", key="close_height_search")
+        if cerrar:
+            st.session_state.show_height = False
+            st.rerun()
+
+#botoncito pa nivel de nodo
+if "show_level" not in st.session_state:
+    st.session_state.show_level = False
+if st.button("Nivel del nodo"):
+    st.session_state.show_level = True
+if st.session_state.get("show_level", False):
+    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="level_id_input")
+    if st.button("nivel"):
+        sismo=arbol.research(id)
+        if sismo is None:
+            st.warning("No se encontró ningún sismo con ese ID.")
+        else:
+            level=arbol.node_level(id)
+            st.write("Nivel del nodo:")
+            st.write(f"ID: {sismo.value.get_id()}, Nivel: {level}")
+    cerrar=st.checkbox("cerrar busqueda", key="close_level_search")
+    if cerrar:
+        st.session_state.show_level = False
+        st.rerun()
+
+
 #aparece en el menu cuando se meten en la pag prin
-st.sidebar.success('ya no aguanto, ya no aguanto')
+st.sidebar.success('Aqui puedes navegar a las diferentes paginas del proyecto')
 
 #mapaaaaaa
+st.header("Mapa de sismos")
+st.info("Puedes hacer zoom y mover el mapa para explorar los sismos registrados. Los puntos representan la ubicación de cada sismo, y su tamaño y color reflejan la magnitud del evento.")
 
 if "data" in st.session_state and len(st.session_state.data) > 0:
 
@@ -253,7 +618,7 @@ if "data" in st.session_state and len(st.session_state.data) > 0:
             "tamaño": False
         },
 
-        size_max=25
+        size_max=10,
     )
 
     fig.update_geos(
@@ -294,7 +659,7 @@ if "data" in st.session_state and len(st.session_state.data) > 0:
         height=600,
 
         margin={
-            "r": 0,
+            "r": 100,
             "t": 10,
             "l": 0,
             "b": 10

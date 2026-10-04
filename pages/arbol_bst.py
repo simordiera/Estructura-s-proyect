@@ -4,6 +4,7 @@ import streamlit as st
 
 from scr.models.BST import BST
 from scr.models.Event import Event
+from scr.models.Archivo import cargar_json
 
 
 st.title("Visualización del árbol BST")
@@ -142,31 +143,24 @@ with st.sidebar:
     )
     st.info("El AVL es la fuente de datos. Las operaciones se realizan desde la página AVL.")
 
-tree = st.session_state.bst_tree
+if "data" not in st.session_state:
+    st.session_state.data = cargar_json()
 
-# El BST solo compara la topologia del mismo conjunto de eventos del AVL.
-avl_state = st.session_state.get("avl_sync_state")
-if avl_state is not None:
-    target_events = list(avl_state["active_events"])
-    if insertion_order == "Clave ascendente":
-        target_events.sort(key=lambda event: event.get_code())
-    elif insertion_order == "Clave descendente":
-        target_events.sort(key=lambda event: event.get_code(), reverse=True)
+tree = BST()
 
-    tree = BST()
-    for target_event in target_events:
-        tree.insert(deepcopy(target_event))
-    st.session_state.bst_tree = tree
+for sismo in st.session_state.data:
+    evento = Event(
+        sismo["identificador"],
+        sismo["magnitud"],
+        sismo["profundidad"],
+        tuple(sismo["coordenadas"]),
+        f'{sismo["fecha"]}T{sismo["hora"]}',
+        sismo["estación"],
+    )
 
-    tree.list_historic = deepcopy(avl_state["historic_events"])
-    tree.retired_ids = set(avl_state["retired_ids"])
-    tree.associations = deepcopy(avl_state["associations"])
-    tree.metrics.restore(avl_state["metrics"])
-    tree.simulation_clock = avl_state["simulation_clock"]
-    tree.archive_age_hours = avl_state["archive_age_hours"]
-else:
-    st.info("Abra primero la página AVL para cargar los eventos del escenario.")
-events = tree.in_order() or []
+    tree.insert(evento)
+
+st.session_state.arbol_bst = tree
 
 st.subheader("Arbol activo")
 st.info("Este árbol muestra la estructura BST sin balanceo, para compararla con el AVL.")
@@ -180,10 +174,6 @@ with right_column:
     st.metric("Altura", calculated_height(tree.root))
     st.metric("Raiz", f"SIS-{tree.root.value.get_id():06d}" if tree.root else "-")
     st.metric("Hojas", sum(1 for row in event_rows(tree) if row["Altura"] == 0))
-
-st.subheader("Detalle de nodos")
-st.dataframe(event_rows(tree), use_container_width=True, hide_index=True)
-st.caption("Las eliminaciones se realizan desde la página AVL y se reflejan aquí automáticamente.")
 
 st.subheader("Histórico")
 if tree.list_historic:
@@ -207,4 +197,77 @@ else:
 st.subheader("Métricas")
 st.json(tree.metrics.counters)
 
+st.subheader("Recorridos")
+traversal_columns = st.columns(4)
+traversals = (
+    ("Preorden", tree.pre_order()),
+    ("Inorden", tree.in_order()),
+    ("Postorden", tree.post_order()),
+    ("Por niveles", tree.breadth_first()),
+)
+for column, (title, traversal) in zip(traversal_columns, traversals):
+    with column:
+        identifiers = [f"SIS-{event.get_id():06d}" for event in (traversal or [])]
+        st.write(f"**{title}**")
+        st.code(" -> ".join(identifiers) if identifiers else "Arbol vacio")
 
+st.caption("Las lineas discontinuas representan enlaces vacios. La profundidad del nodo es distinta de la profundidad del hipocentro.")
+
+color_fondo = "#6e9693"
+color_texto = "#000000"
+color_fondo2 = "#406e75"
+color_fondo3 = "#FFFFFF"
+color_boton = "#FFFFFF"
+color_boton_texto = "#000000"
+color_fondo_pameter = "#FFFFFF"
+color_texto_pameter = "#000000"
+color_fondo_ar = "#FFFFFF"
+color_arriba="#6e9693"
+
+if st.session_state.get("modo_estres", False):
+    color_fondo = "#9c0720"
+    color_texto = "#000000"
+    color_fondo2 = "#610000"
+    color_fondo3 = "#82303C"
+    color_boton = "#734141"
+    color_boton_texto = "#000000"
+    color_fondo_pameter = "#352F30"
+    color_texto_pameter = "#FFFFFF"
+    color_fondo_ar = "#610000"
+    color_arriba="#9c0720"
+
+    st.sidebar.image("scr/pages/resources/estres.jpg", width=300)
+
+if st.session_state.get("modo_rafaga", False):
+    color_fondo = "#D8F3DC"
+    color_texto = "#000000"
+    color_fondo2 = "#B7E4C7"
+    color_fondo3 = "#74C69D"
+    color_boton = "#2D6A4F"
+    color_boton_texto = "#FFFFFF"
+    color_fondo_pameter = "#EAF7ED"
+    color_texto_pameter = "#081C15"
+    color_fondo_ar = "#B7E4C7"
+    color_arriba="#D8F3DC"
+    st.sidebar.image("scr/pages/resources/amor.jpg", width=300)
+
+
+st.markdown(
+    f"""
+    <style>
+
+    .stApp {{
+        background-color: {color_fondo} !important;
+        color: {color_texto} !important;
+    }}
+
+    [data-testid="stSidebar"] {{
+        background-color: {color_fondo2} !important;
+    }}
+    [data-testid="stHeader"] {{
+        background-color: {color_arriba} !important;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
