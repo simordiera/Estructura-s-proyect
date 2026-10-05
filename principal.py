@@ -8,6 +8,7 @@ from scr.models.Archivo import guardar_json , cargar_json, RUTA
 from scr.models.AVL import AVL
 from scr.models.BST import BST
 from scr.models.Scenario import Scenario
+from datetime import datetime, timedelta
 #NO FUN IONA NADA, GAS, NO ME TOQUEN EL CODIGO
 
 #configuracion visual de la pag
@@ -73,10 +74,20 @@ if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or [
 # RECUPERAR EL ARBOL
 arbol = st.session_state.arbol
 arbol_bst = st.session_state.arbol_bst
+for id_eliminado in arbol.list_deleted:
+    if arbol.research(id_eliminado) is not None:
+        earthquake = arbol.research(id_eliminado)
+        arbol.root = arbol._delete(
+            arbol.root,
+            earthquake,
+            arbol.list_deleted,
+            register_deleted=False
+        )
 if "scenario" not in st.session_state:
     st.session_state.scenario = Scenario()
 
 st.session_state.scenario.tree = st.session_state.arbol
+
 # MOSTRAR INFORMACIÓN
 recorrido = arbol.in_order()
 #Markdown sirve pa utilizar css y html, o para mostrar texto, el unsafe permite que el streamlit permita el css
@@ -94,6 +105,8 @@ div.stButton > button {
 }
 </style>
 """, unsafe_allow_html=True)
+
+
 st.subheader("Bienvenido a SismoLab, aquí puedes registrar y analizar sismos de manera eficiente y visual.", text_alignment="center")
 # boton pa crear
 st.write("Si deseas crear un nuevo registro de sismos, presiona el botón 'crear'.")
@@ -361,7 +374,14 @@ if st.button("Eliminar sismo"):
 if st.session_state.get("show_delete", False):
     id=st.number_input("ingrese el numero identificador del sismo que desea eliminar", step=1, min_value=1, max_value=999999, key="delete_id_input")
     if st.button("eliminar definitivamente"):
+        st.write("IDs AVL:", [n.get_id() for n in arbol.in_order()])
+        st.write("Eliminados:", arbol.list_deleted)
+
         result=arbol.delete(id)
+        st.write("ID que intento eliminar:", id)
+        st.write("Resultado delete:", result)
+        st.write("IDs en data:", [s["id"] for s in st.session_state.data])
+        st.write("IDs en AVL:", [n.get_id() for n in arbol.in_order()])
         if result is None:
             st.write("No se encontró ningún sismo con ese ID.")
         else:
@@ -523,6 +543,8 @@ if st.session_state.show_correct_2:
             new_info = {"station": new_station}
         new = arbol.data_correction(id, new_info)
         if new is not None:
+            sismo = arbol.research(id)
+            sismo.value.set_review(0)
             for sismo_json in st.session_state.data:
                 if sismo_json["id"] == id:
                     if opcion == "Magnitud":
@@ -735,3 +757,54 @@ if arbol.list_deleted:
             )
 else:
     st.info("No hay sismos eliminados.")
+
+st.title("Reloj")
+if "simulation_clock" not in st.session_state:
+    st.session_state.simulation_clock = datetime.now()
+
+if "clock_real_start" not in st.session_state:
+    st.session_state.clock_real_start = datetime.now()
+
+if "clock_sim_start" not in st.session_state:
+    st.session_state.clock_sim_start = st.session_state.simulation_clock
+
+
+@st.fragment(run_every="1s")
+def reloj():
+
+    ahora = datetime.now()
+
+    tiempo_transcurrido = ahora - st.session_state.clock_real_start
+
+    st.session_state.simulation_clock = (
+        st.session_state.clock_sim_start + tiempo_transcurrido
+    )
+
+    st.subheader("Reloj de simulación")
+
+    st.write(
+        st.session_state.simulation_clock.strftime("%Y-%m-%d %H:%M:%S")
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button("+ 1 hora"):
+            st.session_state.simulation_clock += timedelta(hours=1)
+            st.session_state.clock_sim_start = st.session_state.simulation_clock
+            st.session_state.clock_real_start = datetime.now()
+
+    with col2:
+        if st.button("+ 1 día"):
+            st.session_state.simulation_clock += timedelta(days=1)
+            st.session_state.clock_sim_start = st.session_state.simulation_clock
+            st.session_state.clock_real_start = datetime.now()
+
+    with col3:
+        if st.button("+ 1 semana"):
+            st.session_state.simulation_clock += timedelta(weeks=1)
+            st.session_state.clock_sim_start = st.session_state.simulation_clock
+            st.session_state.clock_real_start = datetime.now()
+
+
+reloj()
