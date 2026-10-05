@@ -62,9 +62,56 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-st.title("tabla de los sismos revisados", text_alignment="center")
+st.title("Tablas revisados", text_alignment="center")
+
+sismos_no_revisados = []
+sismos_revisados = []
+
+if st.session_state.arbol.root is not None:
+
+    eventos = st.session_state.arbol.in_order()
+
+    for evento in eventos:
+
+        if evento.get_review() == 0:
+
+            sismos_no_revisados.append({
+                "Identificador": evento.get_id(),
+                "Magnitud": evento.get_magnitude(),
+                "Profundidad": evento.get_depth(),
+                "Fecha": evento.get_datetime().date(),
+                "Hora": evento.get_datetime().time(),
+                "Estación": evento.get_station()
+            })
+
+        else:
+
+            sismos_revisados.append({
+                "Identificador": evento.get_id(),
+                "Magnitud": evento.get_magnitude(),
+                "Profundidad": evento.get_depth(),
+                "Fecha": evento.get_datetime().date(),
+                "Hora": evento.get_datetime().time(),
+                "Estación": evento.get_station(),
+                "Revisiones": evento.get_revisions()
+            })
 
 
+st.subheader("tabla de los sismos revisados", text_alignment="center")
+if len(sismos_revisados) > 0:
+    st.dataframe(
+        pd.DataFrame(sismos_revisados),
+        use_container_width=True
+    )
+else:
+    st.info("No hay sismos revisados.")
 
-st.title("tabla de los sismos sin revisar", text_alignment="center")
+st.subheader("tabla de los sismos sin revisar", text_alignment="center")
+if len(sismos_no_revisados) > 0:
+    st.dataframe(
+        pd.DataFrame(sismos_no_revisados),
+        use_container_width=True
+    )
+else:
+    st.info("No hay sismos no revisados.")
 
