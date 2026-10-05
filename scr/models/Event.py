@@ -19,6 +19,7 @@ class Event:
             self.set_revisions(1)
         else:
             self.set_revisions(revisions)
+        self.set_review(1 if self.get_revisions() > 0 else 0)
 
     def set_review(self, review):
         self.review = review

@@ -68,17 +68,15 @@ sismos_no_revisados = []
 sismos_revisados = []
 
 if st.session_state.arbol.root is not None:
-
     eventos = st.session_state.arbol.in_order()
-
     for evento in eventos:
 
         if evento.get_review() == 0:
 
             sismos_no_revisados.append({
-                "Identificador": evento.get_id(),
-                "Magnitud": evento.get_magnitude(),
-                "Profundidad": evento.get_depth(),
+                "id": evento.get_id(),
+                "Magnitude": evento.get_magnitude(),
+                "depth": evento.get_depth(),
                 "Fecha": evento.get_datetime().date(),
                 "Hora": evento.get_datetime().time(),
                 "Estación": evento.get_station()
@@ -87,9 +85,9 @@ if st.session_state.arbol.root is not None:
         else:
 
             sismos_revisados.append({
-                "Identificador": evento.get_id(),
-                "Magnitud": evento.get_magnitude(),
-                "Profundidad": evento.get_depth(),
+                "id": evento.get_id(),
+                "Magnitude": evento.get_magnitude(),
+                "depth": evento.get_depth(),
                 "Fecha": evento.get_datetime().date(),
                 "Hora": evento.get_datetime().time(),
                 "Estación": evento.get_station(),
@@ -107,6 +105,7 @@ else:
     st.info("No hay sismos revisados.")
 
 st.subheader("tabla de los sismos sin revisar", text_alignment="center")
+
 if len(sismos_no_revisados) > 0:
     st.dataframe(
         pd.DataFrame(sismos_no_revisados),
