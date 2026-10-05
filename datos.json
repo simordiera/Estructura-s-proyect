@@ -1,5 +1,17 @@
 [
     {
+        "id": 1001,
+        "magnitude": 3.2,
+        "depth": 45.0,
+        "epicenter": [
+            120,
+            80
+        ],
+        "datetime": "2026-09-20T10:15:00",
+        "station": "STA001",
+        "revisions": 1
+    },
+    {
         "id": 1002,
         "magnitude": 5.1,
         "depth": 25.0,
@@ -33,7 +45,7 @@
         ],
         "datetime": "2026-09-23T19:20:00",
         "station": "STA004",
-        "revisions": 6
+        "revisions": 5
     },
     {
         "id": 1005,
@@ -46,6 +58,54 @@
         "datetime": "2026-09-24T06:10:00",
         "station": "STA005",
         "revisions": 1
+    },
+    {
+        "id": 1001,
+        "magnitude": 3.5,
+        "depth": 50.0,
+        "epicenter": [
+            130,
+            90
+        ],
+        "datetime": "2026-09-20T10:15:00",
+        "station": "STA001",
+        "revisions": 2
+    },
+    {
+        "id": 1001,
+        "magnitude": 4.2,
+        "depth": 32.0,
+        "epicenter": [
+            140,
+            100
+        ],
+        "datetime": "2026-09-20T10:15:00",
+        "station": "STA009",
+        "revisions": 4
+    },
+    {
+        "id": 1006,
+        "magnitude": 4.7,
+        "depth": 20.0,
+        "epicenter": [
+            200,
+            200
+        ],
+        "datetime": "2026-09-25T11:40:00",
+        "station": "STA006",
+        "revisions": 1
+    },
+    {
+        "id": 1007,
+        "magnitude": 1.9,
+        "depth": 200.0,
+        "epicenter": [
+            600,
+            700
+        ],
+        "datetime": "2026-09-26T16:05:00",
+        "station": "STA007",
+        "revisions": 3
     },
     {
         "id": 1008,
@@ -109,7 +169,7 @@
     },
     {
         "id": 1011,
-        "magnitude": 2.4,
+        "magnitude": 9.0,
         "depth": 300.0,
         "epicenter": [
             100,
@@ -130,6 +190,18 @@
         "datetime": "2026-09-30T12:15:00",
         "station": "STA012",
         "revisions": 4
+    },
+    {
+        "id": 1013,
+        "magnitude": 3.9,
+        "depth": 70.0,
+        "epicenter": [
+            750,
+            250
+        ],
+        "datetime": "2026-10-01T15:40:00",
+        "station": "STA013",
+        "revisions": 3
     },
     {
         "id": 1014,
@@ -214,18 +286,6 @@
         "datetime": "2026-10-03T08:30:00",
         "station": "STA018",
         "revisions": 1
-    },
-    {
-        "id": 1019,
-        "magnitude": 7.5,
-        "depth": 200.0,
-        "epicenter": [
-            950,
-            950
-        ],
-        "datetime": "2026-10-03T14:10:00",
-        "station": "STA019",
-        "revisions": 5
     },
     {
         "id": 1020,
@@ -322,18 +382,6 @@
         "datetime": "2026-09-22T23:05:00",
         "station": "STA025",
         "revisions": 4
-    },
-    {
-        "id": 1019,
-        "magnitude": 7.0,
-        "depth": 180.0,
-        "epicenter": [
-            940,
-            920
-        ],
-        "datetime": "2026-10-03T14:10:00",
-        "station": "STA019",
-        "revisions": 2
     },
     {
         "id": 1026,
