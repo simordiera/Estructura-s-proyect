@@ -49,6 +49,72 @@ def make_datetime_text(selected_date, selected_time):
     return selected_datetime.strftime("%Y-%m-%dT%H:%M:%S")
 
 
+def get_event_rows(tree):
+    """Devuelve los sismos activos junto con la altura y el nivel de su nodo."""
+    rows = []
+
+    def visit(node, level):
+        if node is None:
+            return
+
+        event = node.value
+        rows.append(
+            {
+                "Evento": event,
+                "Nivel": level,
+                "Altura": node.height,
+            }
+        )
+        visit(node.left, level + 1)
+        visit(node.right, level + 1)
+
+    visit(tree.root, 0)
+    return rows
+
+
+def event_matches(event_row, criterion, value):
+    """Comprueba si un sismo coincide con el criterio seleccionado."""
+    event = event_row["Evento"]
+
+    if criterion == "Magnitud":
+        return abs(event.get_magnitude() - value) < 0.000001
+    if criterion == "Profundidad":
+        return abs(event.get_depth() - value) < 0.000001
+    if criterion == "Prioridad":
+        return event.get_priority() == value
+    if criterion == "Altura del nodo":
+        return event_row["Altura"] == value
+    if criterion == "Nivel del nodo":
+        return event_row["Nivel"] == value
+    if criterion == "Estación":
+        return value.casefold() in event.get_station().casefold()
+    if criterion == "Zona":
+        return event.get_zone() == value
+    if criterion == "Revisiones":
+        return event.get_revisions() == value
+    if criterion == "Fecha":
+        return event.get_datetime().date() == value
+
+    return False
+
+
+def event_to_search_row(event_row):
+    """Convierte un sismo y su nodo en una fila para mostrar resultados."""
+    event = event_row["Evento"]
+    return {
+        "Identificador": f"SIS-{event.get_id():06d}",
+        "Magnitud": event.get_magnitude(),
+        "Profundidad (km)": event.get_depth(),
+        "Prioridad": event.get_priority(),
+        "Zona": event.get_zone(),
+        "Altura del nodo": event_row["Altura"],
+        "Nivel del nodo": event_row["Nivel"],
+        "Revisiones": event.get_revisions(),
+        "Estación": event.get_station(),
+        "Fecha y hora": event.get_datetime().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+
 scenario = get_scenario()
 queue = scenario.report_queue
 processed_reports = get_processed_reports()
@@ -167,6 +233,99 @@ if add_report:
             f"El reporte SIS-{identifier:06d} se agregó correctamente "
             f"al final de la cola."
         )
+
+
+st.divider()
+st.header("Buscar sismos por característica")
+st.caption(
+    "La búsqueda no usa el identificador y solo consulta los sismos activos "
+    "del AVL."
+)
+
+search_rows = get_event_rows(scenario.tree)
+criteria = [
+    "Magnitud",
+    "Profundidad",
+    "Prioridad",
+    "Altura del nodo",
+    "Nivel del nodo",
+    "Estación",
+    "Zona",
+    "Revisiones",
+    "Fecha",
+]
+
+with st.form("search_event_form"):
+    search_criterion = st.selectbox("Característica", criteria)
+
+    if search_criterion == "Magnitud":
+        search_value = st.number_input(
+            "Magnitud exacta",
+            min_value=-2.0,
+            max_value=10.0,
+            value=2.0,
+            step=0.1,
+            format="%.1f",
+        )
+    elif search_criterion == "Profundidad":
+        search_value = st.number_input(
+            "Profundidad exacta (km)",
+            min_value=0.0,
+            max_value=700.0,
+            value=10.0,
+            step=0.1,
+            format="%.1f",
+        )
+    elif search_criterion == "Prioridad":
+        search_value = st.selectbox("Prioridad", [1, 2, 3])
+    elif search_criterion == "Altura del nodo":
+        search_value = st.number_input(
+            "Altura exacta",
+            min_value=1,
+            max_value=1000,
+            value=1,
+            step=1,
+        )
+    elif search_criterion == "Nivel del nodo":
+        search_value = st.number_input(
+            "Nivel exacto",
+            min_value=0,
+            max_value=1000,
+            value=0,
+            step=1,
+        )
+    elif search_criterion == "Estación":
+        search_value = st.text_input("Texto de la estación")
+    elif search_criterion == "Zona":
+        search_value = st.selectbox("Zona", ["poblada", "no poblada"])
+    elif search_criterion == "Revisiones":
+        search_value = st.number_input(
+            "Número exacto de revisiones",
+            min_value=1,
+            value=1,
+            step=1,
+        )
+    else:
+        search_value = st.date_input("Fecha exacta")
+
+    search_events = st.form_submit_button("Buscar sismos")
+
+if search_events:
+    matching_rows = [
+        event_row
+        for event_row in search_rows
+        if event_matches(event_row, search_criterion, search_value)
+    ]
+
+    if matching_rows:
+        st.success(f"Se encontraron {len(matching_rows)} sismo(s).")
+        st.dataframe(
+            [event_to_search_row(row) for row in matching_rows],
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.info("No se encontraron sismos con esa característica.")
 
 
 st.divider()
