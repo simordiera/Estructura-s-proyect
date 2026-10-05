@@ -1,18 +1,5 @@
 [
     {
-        "identificador": 1,
-        "magnitud": -2.0,
-        "coordenadas": [
-            0,
-            0
-        ],
-        "fecha": "2026-10-03",
-        "hora": "00:03:00",
-        "lugar_reporte": "manizales",
-        "estación": "peri",
-        "profundidad": 0.0
-    },
-    {
         "identificador": 2,
         "magnitud": -2.0,
         "coordenadas": [
