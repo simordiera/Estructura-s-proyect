@@ -71,7 +71,7 @@ if st.session_state.arbol.root is not None:
     eventos = st.session_state.arbol.in_order()
     for evento in eventos:
 
-        if evento.get_revisions() == 0:
+        if evento.get_review() == 0:
 
             sismos_no_revisados.append({
                 "id": evento.get_id(),
