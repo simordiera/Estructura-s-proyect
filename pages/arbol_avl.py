@@ -247,12 +247,15 @@ with right_column:
 st.subheader("Detalle de nodos")
 st.dataframe(event_rows(tree), use_container_width=True, hide_index=True)
 st.caption("Cada botón elimina únicamente el nodo indicado del AVL activo.")
-for event in events:
+for event_index, event in enumerate(events):
     node_columns = st.columns([5, 1])
     with node_columns[0]:
         st.write(f"SIS-{event.get_id():06d} | K={event.get_code()}")
     with node_columns[1]:
-        if st.button("Eliminar", key=f"avl_delete_{event.get_id()}"):
+        if st.button(
+            "Eliminar",
+            key=f"avl_delete_{event.get_id()}_{event_index}",
+        ):
             operation = scenario.delete_event(event.get_id())
             if operation is not None:
                 st.success(f"SIS-{event.get_id():06d} fue eliminado del AVL activo.")
