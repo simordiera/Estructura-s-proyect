@@ -150,12 +150,12 @@ tree = BST()
 
 for sismo in st.session_state.data:
     evento = Event(
-        sismo["identificador"],
-        sismo["magnitud"],
-        sismo["profundidad"],
-        tuple(sismo["coordenadas"]),
-        f'{sismo["fecha"]}T{sismo["hora"]}',
-        sismo["estación"],
+        sismo["id"],
+        sismo["magnitude"],
+        sismo["depth"],
+        tuple(sismo["epicenter"]),
+        f'{sismo["datetime"]}',
+        sismo["station"],
     )
 
     tree.insert(evento)
