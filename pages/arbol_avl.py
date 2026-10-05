@@ -144,6 +144,10 @@ if "archive_age_hours" not in st.session_state:
     st.session_state.archive_age_hours = 72
 if "stress_mode" not in st.session_state:
     st.session_state.stress_mode = False
+if "avl_insertion_order" not in st.session_state:
+    st.session_state.avl_insertion_order = "Orden del archivo"
+if "avl_balance_tree" not in st.session_state:
+    st.session_state.avl_balance_tree = True
 if "scenario" not in st.session_state:
     st.session_state.scenario = create_scenario()
 
@@ -154,12 +158,25 @@ tree = scenario.tree
 
 
 with st.sidebar:
-    insertion_order = "Orden del archivo"
-    balance_tree = True
-    st.session_state.stress_mode = False
-    st.session_state.archive_age_hours = 72
-    if tree.archive_age_hours != st.session_state.archive_age_hours:
-        scenario.change_parameters({"T": st.session_state.archive_age_hours})
+    st.header("Ejemplo")
+    insertion_order = st.selectbox(
+        "Orden de inserción",
+        ("Orden del archivo", "Clave ascendente", "Clave descendente"),
+        key="avl_insertion_order",
+    )
+    balance_tree = st.checkbox(
+        "Aplicar balanceo AVL",
+        key="avl_balance_tree",
+    )
+    st.session_state.stress_mode = not balance_tree
+    archive_age_hours = st.number_input(
+        "Antigüedad mínima T (horas)",
+        min_value=1,
+        step=1,
+        key="archive_age_hours",
+    )
+    if tree.archive_age_hours != archive_age_hours:
+        scenario.change_parameters({"T": archive_age_hours})
     if tree.stress_mode != st.session_state.stress_mode:
         scenario.set_stress_mode(st.session_state.stress_mode)
     archive_candidate = scenario.archive_manager.find_candidate()

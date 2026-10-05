@@ -19,6 +19,16 @@ class AVL:
             self.archive_age_hours = archive_age_hours
             self.stress_mode = stress_mode
 
+    # Estos métodos mantienen en un solo lugar los valores que usa el
+    # archivado automático y permiten que Scenario registre sus cambios.
+    def set_archive_age_hours(self, archive_age_hours):
+        if archive_age_hours <= 0:
+            raise ValueError("La antigüedad mínima debe ser positiva.")
+        self.archive_age_hours = archive_age_hours
+
+    def set_simulation_clock(self, simulation_clock):
+        self.simulation_clock = simulation_clock
+
     def _get_height(self, node: Optional[Node]) -> int: #We define a helper method that returns the height of a node.
         if node is None: #Is the node missing?
             return 0  
