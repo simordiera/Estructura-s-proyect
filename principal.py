@@ -37,12 +37,13 @@ def reconstruir_bst(data):
 
     for sismo in data:
         evento = Event(
-            sismo["identificador"],
-            sismo["magnitud"],
-            sismo["profundidad"],
-            tuple(sismo["coordenadas"]),
-            f'{sismo["fecha"]}T{sismo["hora"]}',
-            sismo["estación"],
+            sismo["id"],
+            sismo["magnitude"],
+            sismo["depth"],
+            tuple(sismo["epicenter"]),
+            f'{sismo["datetime"]}',
+            sismo["station"],
+            sismo.get("revisions", 1)
         )
         nuevo_bst.insert(evento)
 
@@ -60,12 +61,13 @@ if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or [
 
     for sismo in st.session_state.data:
         evento = Event(
-            sismo["identificador"],
-            sismo["magnitud"],
-            sismo["profundidad"],
-            tuple(sismo["coordenadas"]),
-            f'{sismo["fecha"]}T{sismo["hora"]}',
-            sismo["estación"],
+            sismo["id"],
+            sismo["magnitude"],
+            sismo["depth"],
+            tuple(sismo["epicenter"]),
+            f'{sismo["datetime"]}',
+            sismo["station"],
+            sismo.get("revisions", 1)
         )
         st.session_state.arbol.insert(evento)
 
@@ -122,19 +124,18 @@ if st.session_state.show_options:
 
                 for sismo in st.session_state.data:
                     evento = Event(
-                    sismo["identificador"],
-                    sismo["magnitud"],
-                    sismo["profundidad"],
-                    tuple(sismo["coordenadas"]),
-                    f'{sismo["fecha"]}T{sismo["hora"]}',
-                    sismo["estación"],
-        )
+                    sismo["id"],
+                    sismo["magnitude"],
+                    sismo["depth"],
+                    tuple(sismo["epicenter"]),
+                    f'{sismo["datetime"]}',
+                    sismo["station"],
+                    sismo.get("revisions", 1)
+                )
 
                     st.session_state.arbol.insert(evento)
                 st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
                 arbol=st.session_state.arbol
-                st.success("Archivo cargado correctamente :)")
-                st.write(st.session_state.data)
                 st.success("Archivo cargado correctamente :)")
                 #st.session_state.show_options = False
                 #st.session_state.show_upload = False
@@ -168,14 +169,13 @@ if st.session_state.show_options:
                         
                         arbol.insert(evento)
                         st.session_state.data.append ({
-                            "identificador": id,
-                            "magnitud": magnitude,
-                            "coordenadas": (x, y),
-                            "fecha": str(date),
-                            "hora": str(time),
-                            "lugar_reporte": report_location,
-                            "estación":stations,
-                            "profundidad":depth,
+                            "id": id,
+                            "magnitude": magnitude,
+                            "epicenter": [x, y],
+                            "datetime": fecha_hora,
+                            "station": stations,
+                            "depth":depth,
+                            "revisions": 0
                 })
 
                         guardar_json(st.session_state.data)
@@ -352,8 +352,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
-
 #BOTON PA ELIMINAR
 if "show_delete" not in st.session_state:
     st.session_state.show_delete = False
@@ -369,7 +367,7 @@ if st.session_state.get("show_delete", False):
             st.write("Se eliminó el sismo con ID:", result.value.get_id())
             st.session_state.data = [
             sismo for sismo in st.session_state.data
-            if sismo["identificador"] != id
+            if sismo["id"] != id
     ]
 
             guardar_json(st.session_state.data)
@@ -399,28 +397,61 @@ if st.session_state.get("show_search", False):
         st.session_state.show_search = False
         st.rerun()
 
-#boton pa buscar si el sismo esta revisado o no
+#cosillo pa revision definitivo
 if "show_review" not in st.session_state:
     st.session_state.show_review = False
-if st.button("Sismo revisado o no"):
+if "show_check_review" not in st.session_state:
+    st.session_state.show_check_review = False
+if "show_do_review" not in st.session_state:
+    st.session_state.show_do_review = False
+if st.button("Revisión"):
     st.session_state.show_review = True
 if st.session_state.get("show_review", False):
-    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="review_id_input")
-    if st.button("revisar"):
-        sismo=arbol.research(id)
-        if sismo is None:
-            st.warning("No se encontró ningún sismo con ese ID.")
-        else:
-            review=sismo.value.get_review()
-            if review==0:
-                st.write("El sismo con ID:", sismo.value.get_id(), "no ha sido revisado.")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Ver si está revisado"):
+            st.session_state.show_check_review = True
+            st.session_state.show_do_review = False
+    with col2:
+        if st.button("Revisar sismo"):
+            st.session_state.show_do_review = True
+            st.session_state.show_check_review = False
+    # VER SI EL SISMO ESTÁ REVISADO
+    if st.session_state.get("show_check_review", False):
+        id = st.number_input("ingrese el numero identificador del sismo que desea buscar",step=1,min_value=1,max_value=999999,key="review_id_input")
+        if st.button("revisar", key="check_review_button"):
+            sismo = arbol.research(id)
+            if sismo is None:
+                st.warning("No se encontró ningún sismo con ese ID.")
             else:
-                st.write("El sismo con ID:", sismo.value.get_id(), "ha sido revisado.")
-    cerrar=st.checkbox("cerrar busqueda", key="close_review_search")
+                review = sismo.value.get_review()
+                if review == 0:
+                    st.write("El sismo con ID:",sismo.value.get_id(),"no ha sido revisado.")
+                else:
+                    st.write("El sismo con ID:",sismo.value.get_id(),"ha sido revisado.")
+    # REVISAR EL SISMO
+    if st.session_state.get("show_do_review", False):
+        id = st.number_input("ingrese el numero identificador del sismo que desea revisar",step=1,min_value=1,max_value=999999,key="do_review_id_input")
+        if st.button("Revisar sismo", key="do_review_button"):
+            resultado = arbol.review(id)
+            if resultado:
+                sismo = arbol.research(id)
+                for sismo_json in st.session_state.data:
+                    if sismo_json["id"] == id:
+                        sismo_json["revisions"] = sismo.value.get_revisions()
+                        break
+                guardar_json(st.session_state.data)
+                st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
+            if resultado is None:
+                st.warning("No se encontró ningún sismo con ese ID.")
+            else:
+                st.success("El sismo ha sido revisado correctamente.")
+    cerrar = st.checkbox("cerrar revision",key="close_review_search")
     if cerrar:
         st.session_state.show_review = False
+        st.session_state.show_check_review = False
+        st.session_state.show_do_review = False
         st.rerun()
-
 #boton pa corregir un sismito
 if "show_correct" not in st.session_state:
     st.session_state.show_correct = False
@@ -463,50 +494,40 @@ if st.session_state.show_correct_2:
     if st.button("Corregir definitivamente"):
         sismo_json_actual = next(
             s for s in st.session_state.data
-            if s["identificador"] == id
+            if s["id"] == id
         )
         if opcion == "Magnitud":
-            new_info = {"magnitud": new_sismo}
+            new_info = {"magnitude": new_sismo}
         elif opcion == "Profundidad":
-            new_info = {"profundidad": new_sismo}
+            new_info = {"depth": new_sismo}
         elif opcion == "Coordenada x":
-            new_info = {
-                "epicentro": (
-                    new_sismo,sismo_json_actual["coordenadas"][1])
-            }
+            new_info = {"epicenter": (new_sismo,sismo_json_actual["epicenter"][1])}
         elif opcion == "Coordenada y":
-            new_info = {
-                "epicentro": (
-                    sismo_json_actual["coordenadas"][0],new_sismo)
-            }
+            new_info = {"epicenter": (sismo_json_actual["epicenter"][0],new_sismo)}
         elif opcion == "Fecha":
-            new_info = {
-                "fecha y hora": f"{new_sismo}T{sismo_json_actual['hora']}"
-            }
+            new_info = {"datetime": f"{new_sismo}T{sismo_json_actual['datetime'].split('T')[1]}"}
         elif opcion == "hora":
-            new_info = {
-                "fecha y hora": f"{sismo_json_actual['fecha']}T{new_sismo}"
-            }
+            new_info = {"datetime": f"{sismo_json_actual['datetime'].split('T')[0]}T{new_sismo}"}
         elif opcion == "Estación":
-            new_info = {"estacion": new_station}
+            new_info = {"station": new_station}
         new = arbol.data_correction(id, new_info)
         if new is not None:
             for sismo_json in st.session_state.data:
-                if sismo_json["identificador"] == id:
+                if sismo_json["id"] == id:
                     if opcion == "Magnitud":
-                        sismo_json["magnitud"] = new_sismo
+                        sismo_json["magnitude"] = new_sismo
                     elif opcion == "Profundidad":
-                        sismo_json["profundidad"] = new_sismo
+                        sismo_json["depth"] = new_sismo
                     elif opcion == "Coordenada x":
-                        sismo_json["coordenadas"][0] = new_sismo
+                        sismo_json["epicenter"][0] = new_sismo
                     elif opcion == "Coordenada y":
-                        sismo_json["coordenadas"][1] = new_sismo
+                        sismo_json["epicenter"][1] = new_sismo
                     elif opcion == "Fecha":
-                        sismo_json["fecha"] = str(new_sismo)
+                        sismo_json["datetime"] = f"{new_sismo}T{sismo_json['datetime'].split('T')[1]}"
                     elif opcion == "hora":
-                        sismo_json["hora"] = str(new_sismo)
+                        sismo_json["datetime"] = f"{sismo_json['datetime'].split('T')[0]}T{new_sismo}"
                     elif opcion == "Estación":
-                        sismo_json["estación"] = new_station
+                        sismo_json["station"] = new_station
                     break
             guardar_json(st.session_state.data)
             st.session_state.arbol_bst = reconstruir_bst(
@@ -582,18 +603,17 @@ if "data" in st.session_state and len(st.session_state.data) > 0:
     for sismo in st.session_state.data:
 
         datos_mapa.append({
-            "lat": sismo["coordenadas"][1],
-            "lon": sismo["coordenadas"][0],
-            "identificador": sismo["identificador"],
-            "magnitud": sismo["magnitud"],
-            "fecha": sismo["fecha"],
-            "hora": sismo["hora"],
-            "lugar_reporte": sismo["lugar_reporte"]
+            "lat": sismo["epicenter"][1],
+            "lon": sismo["epicenter"][0],
+            "id": sismo["id"],
+            "magnitude": sismo["magnitude"],
+            "datetime": sismo["datetime"],
+            "station": sismo["station"],
         })
     data = pd.DataFrame(datos_mapa)
 
     # tamaño pa los puntos (que tan grandes son), tiene que ser positivo
-    data["tamaño"] = data["magnitud"].abs() + 1
+    data["tamaño"] = data["magnitude"].abs() + 1
 
     fig = px.scatter_geo(
         data,
@@ -601,18 +621,17 @@ if "data" in st.session_state and len(st.session_state.data) > 0:
         lon="lon",
 
         # Nombre que aparece al pasar el mouse
-        hover_name="lugar_reporte",
+        hover_name="station",
         # Nombre que aparece directamente sobre el punto
-        text="lugar_reporte",
+        text="station",
         # El tamaño depende de la magnitud
         size="tamaño",
         #el color  dependiendo de la magnitud del sismo, mientras mas grande el numero, mas azul es
-        color="magnitud",
+        color="magnitude",
         hover_data={
-            "identificador": True,
-            "magnitud": True,
-            "fecha": True,
-            "hora": True,
+            "id": True,
+            "magnitude": True,
+            "datetime": True,
             "lat": True,
             "lon": True,
             "tamaño": False
