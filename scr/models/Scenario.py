@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from scr.models.AVL import AVL
+from scr.models.BST import BST
 from scr.models.Node import Node
 from scr.models.Operation import Operation
 from scr.models.ReportQueue import ReportQueue
@@ -9,8 +10,8 @@ from scr.models.UndoStack import UndoStack
 
 
 class Scenario:
-	# Scenario es el coordinador del sistema. La interfaz llama a esta
-	# clase y no modifica directamente el AVL ni la cola de reportes.
+	# Scenario coordinates the system; the interface calls it instead of
+	# modifying the AVL or report queue directly.
 	def __init__(
 		self,
 		simulation_clock=None,
@@ -22,6 +23,7 @@ class Scenario:
 			archive_age_hours=archive_age_hours,
 			stress_mode=stress_mode,
 		)
+		self.bst = BST()
 		self.report_queue = ReportQueue()
 		self.undo_stack = UndoStack()
 		self.archive_manager = SubtreeArchiveManager(self.tree)
@@ -36,11 +38,49 @@ class Scenario:
 		}
 		self.stress_mode = stress_mode
 		self.versions = {}
+		self._bst_insertion_order = []
+
+	def attach_trees(self, avl, bst=None):
+		"""Attach the trees already owned by the application session."""
+		self.tree = avl
+		self.archive_manager.tree = avl
+		if bst is not None:
+			self.bst = bst
+		self.sync_comparison_tree()
+
+	def sync_comparison_tree(self):
+		"""Make the comparison BST contain exactly the active AVL events."""
+		active_events = {
+			event.get_id(): event
+			for event in (self.tree.in_order() or [])
+		}
+		known_ids = [
+			event_id
+			for event_id in self._bst_insertion_order
+			if event_id in active_events
+		]
+		known_set = set(known_ids)
+		known_ids.extend(
+			event_id
+			for event_id in active_events
+			if event_id not in known_set
+		)
+		self._bst_insertion_order = list(dict.fromkeys(known_ids))
+
+		new_bst = BST()
+		for event_id in self._bst_insertion_order:
+			new_bst.insert(active_events[event_id])
+		new_bst.list_historic = self.tree.list_historic
+		new_bst.list_deleted = list(self.tree.list_deleted)
+		new_bst.retired_ids = set(self.tree.retired_ids)
+		new_bst.associations = self.tree.associations
+		new_bst.metrics.restore(self.tree.metrics.snapshot())
+		new_bst.simulation_clock = self.tree.simulation_clock
+		new_bst.archive_age_hours = self.tree.archive_age_hours
+		self.bst = new_bst
 
 	def _copy_value(self, value, copied_objects):
-		# Esta copia se escribe de forma explícita para no depender de
-		# copy.deepcopy. El diccionario evita copiar dos veces el mismo objeto
-		# y también protege contra referencias circulares.
+		# Copy values explicitly to preserve shared references and cycles.
 		value_id = id(value)
 		if value_id in copied_objects:
 			return copied_objects[value_id]
@@ -120,12 +160,19 @@ class Scenario:
 		return value
 
 	def snapshot(self):
-		# Se guarda la raíz completa y no únicamente el recorrido inorden.
-		# Así se conservan los hijos, las alturas y la topología exacta.
+		# Store complete roots to preserve links, heights, and topology.
 		copied_objects = {}
 		state = {}
 		state["root"] = self._copy_value(
 			self.tree.root,
+			copied_objects,
+		)
+		state["bst_root"] = self._copy_value(
+			self.bst.root,
+			copied_objects,
+		)
+		state["bst_insertion_order"] = self._copy_value(
+			self._bst_insertion_order,
 			copied_objects,
 		)
 		state["list_historic"] = self._copy_value(
@@ -173,11 +220,18 @@ class Scenario:
 		return state
 
 	def restore_snapshot(self, state):
-		# Cada llamada usa una tabla nueva para que el snapshot guardado
-		# permanezca independiente del estado que se está restaurando.
+		# Use a new copy map so stored snapshots remain independent.
 		copied_objects = {}
 		self.tree.root = self._copy_value(
 			state["root"],
+			copied_objects,
+		)
+		self.bst.root = self._copy_value(
+			state.get("bst_root"),
+			copied_objects,
+		)
+		self._bst_insertion_order = self._copy_value(
+			state.get("bst_insertion_order", []),
 			copied_objects,
 		)
 		self.tree.list_historic = self._copy_value(
@@ -230,10 +284,19 @@ class Scenario:
 		)
 		if "T" in self.parameters:
 			self.tree.archive_age_hours = self.parameters["T"]
+		if "bst_root" not in state:
+			self.sync_comparison_tree()
+		else:
+			self.bst.list_historic = self.tree.list_historic
+			self.bst.list_deleted = list(self.tree.list_deleted)
+			self.bst.retired_ids = set(self.tree.retired_ids)
+			self.bst.associations = self.tree.associations
+			self.bst.metrics.restore(self.tree.metrics.snapshot())
+			self.bst.simulation_clock = self.tree.simulation_clock
+			self.bst.archive_age_hours = self.tree.archive_age_hours
 
 	def _save_operation(self, operation_type, description, before):
-		# Todas las modificaciones producidas por una acción se agrupan en
-		# una sola Operation, aunque el AVL haga varios pasos internos.
+		# Group all internal changes from one action into one Operation.
 		after = self.snapshot()
 		operation = Operation(
 			operation_type,
@@ -245,7 +308,7 @@ class Scenario:
 		return operation
 
 	def undo(self):
-		# UndoStack mueve la acción de la pila undo a la pila redo.
+		# UndoStack moves the action from undo to redo.
 		operation = self.undo_stack.undo()
 		if operation is None:
 			return None
@@ -253,7 +316,7 @@ class Scenario:
 		return operation
 
 	def redo(self):
-		# UndoStack mueve la acción de la pila redo a la pila undo.
+		# UndoStack moves the action from redo to undo.
 		operation = self.undo_stack.redo()
 		if operation is None:
 			return None
@@ -261,8 +324,7 @@ class Scenario:
 		return operation
 
 	def create_event(self, event):
-		# El identificador no se puede repetir ni reutilizar después de
-		# una eliminación definitiva.
+		# IDs cannot be duplicated or reused after permanent deletion.
 		if self.tree.research(event.get_id()) is not None:
 			return None
 		if event.get_id() in self.tree.retired_ids:
@@ -270,6 +332,9 @@ class Scenario:
 
 		before = self.snapshot()
 		self.tree.insert(event)
+		if event.get_id() not in self._bst_insertion_order:
+			self._bst_insertion_order.append(event.get_id())
+		self.sync_comparison_tree()
 		return self._save_operation(
 			"crear_evento",
 			"Se creó un evento.",
@@ -284,6 +349,7 @@ class Scenario:
 		result = self.tree.data_correction(event_id, new_info)
 		if result is None:
 			return None
+		self.sync_comparison_tree()
 		return self._save_operation(
 			"corregir_evento",
 			"Se corrigieron los datos de un evento.",
@@ -298,6 +364,9 @@ class Scenario:
 		event = self.tree.delete(event_id)
 		if event is None:
 			return None
+		if event_id in self._bst_insertion_order:
+			self._bst_insertion_order.remove(event_id)
+		self.sync_comparison_tree()
 		return self._save_operation(
 			"eliminar_evento",
 			"Se eliminó un evento.",
@@ -311,6 +380,7 @@ class Scenario:
 		before = self.snapshot()
 		if not self.tree.review(event_id):
 			return None
+		self.sync_comparison_tree()
 		return self._save_operation(
 			"marcar_revisado",
 			"Se marcó un evento como revisado.",
@@ -318,8 +388,7 @@ class Scenario:
 		)
 
 	def archive_subtree(self, archive_age_hours=None):
-		# El administrador solo busca y separa la rama. Scenario conserva
-		# el historial global y registra todo el archivo como una acción.
+		# The manager detaches the branch; Scenario stores history and action state.
 		candidate = self.archive_manager.find_candidate(
 			archive_age_hours
 		)
@@ -344,6 +413,8 @@ class Scenario:
 		events = self.archive_manager._collect_events(detached)
 		for event in events:
 			self.tree.list_historic.append(event)
+			if event.get_id() in self._bst_insertion_order:
+				self._bst_insertion_order.remove(event.get_id())
 		self.tree.metrics.increment("mass_archives")
 		self.tree.metrics.increment(
 			"archived_events",
@@ -351,6 +422,7 @@ class Scenario:
 		)
 		if not self.tree.stress_mode:
 			self.tree.balance()
+		self.sync_comparison_tree()
 
 		operation = self._save_operation(
 			"archivar_subarbol",
@@ -392,7 +464,7 @@ class Scenario:
 		return operation
 
 	def _process_report_against_tree(self, report):
-		"""Clasifica y aplica un reporte usando el AVL actual."""
+		"""Classify and apply a report using the current AVL."""
 		event_id = report.identifier
 		active_node = self.tree.research(event_id)
 		historic_event = next(
@@ -493,6 +565,9 @@ class Scenario:
 
 			self.tree.list_historic.remove(historic_event)
 			self.tree.insert(report.to_event())
+			if event_id not in self._bst_insertion_order:
+				self._bst_insertion_order.append(event_id)
+			self.sync_comparison_tree()
 			return {
 				"decision": "reactivado",
 				"message": (
@@ -503,6 +578,9 @@ class Scenario:
 			}
 
 		self.tree.insert(report.to_event())
+		if event_id not in self._bst_insertion_order:
+			self._bst_insertion_order.append(event_id)
+		self.sync_comparison_tree()
 		return {
 			"decision": "nuevo",
 			"message": (
@@ -513,7 +591,7 @@ class Scenario:
 		}
 
 	def _apply_report_to_active_event(self, event, report):
-		"""Actualiza un evento existente sin crear un nodo con el mismo ID."""
+		"""Update an existing event without creating a duplicate node."""
 		old_key = event.get_code()
 		new_event = report.to_event()
 		new_key = new_event.get_code()
@@ -536,9 +614,10 @@ class Scenario:
 
 		if old_key != new_key:
 			self.tree.insert(event)
+		self.sync_comparison_tree()
 
 	def _add_station_to_event(self, event, station):
-		"""Conserva las estaciones aceptadas sin exigir un tipo concreto."""
+		"""Preserve accepted stations without requiring a specific container type."""
 		current_station = event.get_station()
 		if isinstance(current_station, set):
 			current_station.add(station)
@@ -583,8 +662,7 @@ class Scenario:
 		)
 
 	def save_version(self, name):
-		# Una versión contiene el estado operativo, pero no las pilas ni
-		# las demás versiones guardadas.
+		# A version stores operational state, not stacks or other versions.
 		self.versions[name] = self.snapshot()
 		return self.versions[name]
 

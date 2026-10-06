@@ -2,21 +2,19 @@ from dataclasses import dataclass
 from typing import Optional
 from scr.models.Event import Event
 
-# Define a Node class used to store an earthquake event in the AVL tree.
+# Store one event and its links in a tree node.
 @dataclass
 class Node:
-    #Store the earthquake event contained in this node.
+    # Event stored in the node.
     value: 'Event'
 
-    # Store the left child of the node.
-    # It is None if the node does not have a left child.
+    # Left child, or None when absent.
     left: Optional['Node'] = None
 
-    # Store the right child of the node.
-    # It is None if the node does not have a right child.
+    # Right child, or None when absent.
     right: Optional['Node'] = None
     height: int = 1
 
-    # A node is a leaf when it has no left or right child.
+    # A node is a leaf when both children are absent.
     def is_leaf(self) -> bool:
         return self.left is None and self.right is None

@@ -6,6 +6,7 @@ from scr.models.Metrics import Metrics
 
 class BST:
     def __init__(self):
+        # Keep the unbalanced comparison tree state.
         self.root = None
         self.list_deleted=[]
         self.list_historic = []
@@ -16,6 +17,7 @@ class BST:
         self.archive_age_hours = 72
 
     def insert(self, value) -> None:
+        # Insert by the event key without rotations.
         for i in range (len(self.list_deleted)):
             if (self.list_deleted[i]== value.get_id()):
                 return None
@@ -148,6 +150,7 @@ class BST:
             return self._research(node.right, id)
 
     def delete(self, id):
+        # Remove one active event and record its retired ID.
         earthquake = self.research(id)
         if earthquake is None or id in self.list_deleted:
             return None

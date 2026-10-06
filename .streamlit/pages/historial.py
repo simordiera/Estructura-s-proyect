@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-#ESTE TAMPOCO M LO TOQUEN
+# History view.
 st.title("historial de los sismos creados", text_alignment="center")
 
 if "data" in st.session_state:

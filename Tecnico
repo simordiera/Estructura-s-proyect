@@ -1,0 +1,253 @@
+UNIVERSIDAD DE CALDAS
+
+Facultad de Ingenierías Ingeniería de Sistemas SismoLab
+Manual de Usuario del Sistema de Gestión y Análisis de
+Eventos Sísmicos Integrantes:
+Isabela Giraldo Ospina
+Dana Marcela Ramírez Naranjo Simón Martínez Yepes
+Asignatura: Estructuras de Datos Profesor:
+Jairo Vélez Fecha:
+5 de octubre de 2026
+ 
+Introducción:
+
+El proyecto consiste en el desarrollo de un sistema para la gestión y organización de eventos sísmicos, utilizando estructuras de datos como el árbol BST y el árbol AVL. El sistema permite registrar, consultar, modificar y eliminar información relacionada con los sismos, además de clasificarlos según características como prioridad, magnitud e identificador.
+Su propósito principal es aplicar los conceptos de estructuras de datos en un entorno práctico. El sistema incorpora funcionalidades como recorridos de los árboles, balanceo del AVL, agregar un sismo, eliminarlo, etc.
+
+
+Objetivo general
+
+Desarrollar un sistema para la gestión y organización de eventos sísmicos mediante la implementación de estructuras de datos BST y AVL, permitiendo almacenar, consultar, modificar, eliminar y procesar información de manera organizada y eficiente.
+Objetivos específicos
+
+Implementar un árbol BST para almacenar y gestionar los eventos sísmicos.
+
+Implementar un árbol AVL que permita mantener la información balanceada para optimizar las operaciones de búsqueda, inserción y eliminación.
+Permitir la búsqueda, modificación y eliminación, agregación, de eventos sísmicos.
+Implementar diferentes recorridos de los árboles para visualizar y analizar la información almacenada.
+Desarrollar un sistema de reportes y colas para organizar y procesar solicitudes relacionadas con las estaciones de los eventos.
+Incorporar mecanismos de revisión y seguimiento de los sismos registrados.
+
+Implementar funciones de deshacer y rehacer acciones para facilitar la gestión de cambios realizados por el usuario.
+Desarrollar una interfaz que permita al usuario interactuar de manera sencilla con las diferentes funcionalidades del sistema.
+ 
+Requisitos del sistema:
+
+Para ejecutar correctamente el sistema la página de eventos sísmicos, es necesario contar con los siguientes requisitos:
+-Python: Se utiliza como lenguaje principal para el desarrollo del proyecto y la implementación de las estructuras de datos.
+-Streamlit: Se utiliza para desarrollar y ejecutar la interfaz gráfica del sistema.
+
+-Librerías de Python: El proyecto requiere las librerías utilizadas para el funcionamiento de las estructuras de datos, manejo de fechas, almacenamiento de información y desarrollo de la interfaz.
+Entorno de desarrollo: Se recomienda utilizar Visual Studio Code
+
+
+
+Código: Clase Event
+ 
+La clase Event representa cada uno de los eventos sísmicos manejados por el sistema. Su función principal es almacenar la información de cada sismo y realizar automáticamente la creación de la tupla. Cada objeto Event contiene información como el identificador, magnitud, profundidad, epicentro, fecha, estación, estado de revisión y número de revisiones.
+-Atributos principales
+
+Atributo	Descripción:
+ 
+Id	Identificador único del sismo.
+magnitude	Magnitud del evento sísmico.
+depth	Profundidad del sismo.
+epicenter	
+Coordenadas (x,y) del epicentro dentro del mapa.
+datatime	Fecha y hora en la que ocurrió el sismo.
+station	Estacion de reporte
+zone	Determina si el epicentro se encuentra en una zona poblada o no poblada.
+priority	
+Nivel de prioridad asignado al sismo.
+review	
+Indica si el sismo se encuentra revisado o pendiente de revisión.
+revisions	Cantidad de revisiones realizadas al evento.
+
+
+- Validación de los datos:
+
+La clase utiliza métodos set y get para establecer y consultar los atributos de cada evento. Los métodos set también permiten validar que los datos ingresados se encuentren dentro de los rangos establecidos.
+Por ejemplo:
+
+El ID debe estar entre 1 y 999999.
+
+La magnitud debe estar entre -2.0 y 10.0. La profundidad debe estar entre 0 y 700.
+Las coordenadas del epicentro deben encontrarse entre 0 y 1000. La fecha del evento no puede ser posterior a la fecha actual.
+-Determinación de la zona:
+ 
+ 
+A partir de las coordenadas del epicentro, el sistema determina si el sismo se encuentra en una zona poblada o no poblada. Para esto, el mapa de 1000 × 1000 se divide en una cuadrícula de 10 × 10, donde cada espacio tiene un tamaño de 100 × 100. El sistema compara las coordenadas del epicentro con las áreas pobladas previamente definidas. Si el epicentro se encuentra dentro de alguna de estas áreas, el evento se clasifica como "poblada". En caso contrario, se clasifica como "no poblada".
+-Determinación de la prioridad:
+
+
+La prioridad del sismo se establece automáticamente teniendo en cuenta su magnitud, profundidad y zona.
+Se manejan tres niveles:
+
+Prioridad 3 – Alta: cuando la magnitud es mayor o igual a 6.0, o cuando la magnitud es mayor o igual a 4.5, la profundidad es menor o igual a 30 y el evento ocurre en una zona poblada.
+Prioridad 2 – Media: cuando no cumple las condiciones anteriores, pero la magnitud es mayor o igual a 4.5.
+Prioridad 1 – Baja: cuando la magnitud es menor a 4.5.
+ 
+De esta manera, la prioridad se determina automáticamente al crear el evento.
+
+-Código de organización:
+
+
+El método get_code() genera una tupla con tres valores: (prioridad, magnitud, id)
+Esta tupla es utilizada para organizar y comparar los eventos dentro de los árboles AVL y BST. La información completa del sismo permanece almacenada en el objeto Event, mientras que esta clave se utiliza para determinar su posición dentro del arbol.
+-Sistema de revisión:
+
+
+Cada evento cuenta con un atributo review que permite identificar su estado de revisión.
+El sistema utiliza:
+
+0: pendiente de revisión. 1: revisado.
+Además, cada evento cuenta con el atributo revisions, que registra la cantidad de revisiones asociadas al sismo. Cuando un evento es creado por primera vez, se establece inicialmente el número de revisiones en 1.
+ 
+Esto permite llevar un control sobre los eventos que ya fueron revisados y aquellos que todavía requieren atención.
+-Estaciones:
+
+Cada evento almacena información sobre la estación relacionada mediante el atributo station.
+
+
+
+
+
+
+-Representación del evento:
+
+
+Finalmente, el método  str () permite obtener una representación textual del evento, mostrando principalmente su prioridad, magnitud e identificador, junto con el resto de información almacenada en el objeto.
+De esta manera, la clase Event funciona como la base para representar y administrar cada sismo antes de ser incorporado a las estructuras AVL y BST.
+ 
+Clase Node:
+
+
+
+Estructuras de datos:
+
+- Árbol AVL:
+
+El árbol AVL es un árbol binario de búsqueda que mantiene automáticamente un estado de balance después de realizar operaciones de inserción o eliminación. En el proyecto, esta estructura se utiliza para organizar los eventos sísmicos y facilitar operaciones como búsqueda, inserción, eliminación y consulta de información.
+Cada nodo del árbol contiene un objeto correspondiente a un evento sísmico. Los eventos se organizan mediante una tupla que permite establecer el orden dentro del árbol.
+-Inserción de sismos:
+
+Cuando se registra un nuevo sismo, primero se crea el objeto Event con la información correspondiente. Posteriormente, se obtiene su clave de organización y se compara con los nodos existentes para determinar su posición dentro del árbol. Una vez insertado el nuevo nodo, el árbol AVL verifica los niveles de sus subárboles y realiza el proceso de balanceo cuando es necesario.
+-Cálculo del balance:
+ 
+El factor de balance permite determinar si un nodo se encuentra equilibrado. Este se obtiene mediante la diferencia entre la altura del subárbol izquierdo y la altura del subárbol derecho. En un árbol AVL, el factor de balance de cada nodo debe mantenerse entre -1 y 1. Cuando el valor se encuentra fuera de este rango, significa que el nodo está desbalanceado y es necesario realizar una rotación.
+-Rotaciones:
+
+Las rotaciones permiten recuperar el equilibrio del árbol sin perder la organización de los elementos. Dependiendo de la forma en que se produzca el desbalance, se pueden realizar diferentes tipos de rotación:
+Rotación simple a la derecha: utilizada en casos de desbalance hacia la izquierda.
+Rotación simple a la izquierda: utilizada en casos de desbalance hacia la derecha.
+Rotación doble izquierda-derecha: combina una rotación a la izquierda y posteriormente una a la derecha.
+Rotación doble derecha-izquierda: combina una rotación a la derecha y posteriormente una a la izquierda.
+Estas operaciones permiten mantener la estructura AVL equilibrada después de las modificaciones.
+7.1.4	Eliminación
+
+Para eliminar un sismo, primero se realiza una búsqueda utilizando su identificador. Una vez localizado el evento, se elimina el nodo correspondiente siguiendo las reglas de eliminación de un árbol binario de búsqueda.
+Después de la eliminación, se actualizan las alturas de los nodos afectados y se verifica nuevamente el factor de balance. Si se encuentra algún desbalance, se realizan las rotaciones correspondientes para recuperar el equilibrio del árbol.
+7.1.5	Búsqueda
+
+El sistema permite buscar eventos sísmicos mediante diferentes características. Una de las principales opciones es la búsqueda por identificador, recorriendo el árbol y comparando el valor buscado con la información almacenada en cada nodo.
+Además, el sistema cuenta con opciones de búsqueda por características de los eventos, como:
+ 
+Magnitud. Zona.
+Prioridad. Altura del nodo.
+Otras características disponibles en el sistema.
+
+Esto permite realizar consultas específicas sobre los sismos almacenados.
+
+7.1.6	Recorridos
+
+El sistema permite realizar diferentes recorridos sobre el árbol AVL para visualizar y analizar la organización de los eventos.
+Entre los recorridos implementados se encuentran:
+
+Preorden: visita primero la raíz, luego el subárbol izquierdo y finalmente el derecho.
+Inorden: visita el subárbol izquierdo, posteriormente la raíz y finalmente el derecho. Permite visualizar los elementos siguiendo el orden establecido por la estructura.
+Postorden: visita primero los subárboles y finalmente la raíz.
+
+Por niveles: recorre el árbol desde el nivel superior hacia los niveles inferiores.
+
+Estos recorridos permiten observar la estructura y distribución de los eventos dentro del árbol.
+7.1.7	Corrección de datos
+
+El sistema permite modificar la información de un sismo que ya se encuentra almacenado. Para realizar una corrección, primero se localiza el evento mediante su identificador y posteriormente se actualizan los datos seleccionados.
+Cuando la modificación afecta características utilizadas para organizar el árbol, como la magnitud u otros valores que forman parte de la clave, el evento debe ser reorganizado dentro del árbol para mantener su estructura correcta.
+Además, cuando un sismo es modificado, su estado de revisión pasa a pendiente y aumenta el número de revisiones realizadas.
+7.1.8	Archivado de subárboles
+ 
+El sistema también cuenta con una función para archivar subárboles que cumplen determinadas condiciones de antigüedad. Esta funcionalidad permite retirar y almacenar grupos de eventos que ya cumplen con el tiempo establecido, evitando mantenerlos dentro de la estructura principal cuando ya no son necesarios para las operaciones habituales.
+El proceso permite identificar el subárbol que cumple las condiciones establecidas y posteriormente almacenarlo como información histórica.
+7.1.9	Características adicionales
+
+El árbol AVL también cuenta con funcionalidades complementarias que facilitan la interacción con la estructura, como el modo estrés, que permite trabajar temporalmente sin realizar el balanceo automático del árbol, y las opciones para deshacer y rehacer acciones realizadas por el usuario.
+Estas funcionalidades permiten realizar pruebas y observar el comportamiento del	árbol	en	diferentes	situaciones.
+
+8. Interfaz gráfica del sistema
+
+La interfaz fue desarrollada con Streamlit y se encuentra separada de las clases de negocio ubicadas en la carpeta `scr/models`. El archivo `principal.py` funciona como pantalla inicial y permite cargar los datos, registrar eventos, consultar información, eliminar sismos, corregir datos, revisar eventos y visualizar el mapa.
+
+La aplicación conserva el estado de los árboles y de los eventos durante la navegación mediante `st.session_state`. De esta manera, las páginas secundarias consultan la información construida desde la pantalla principal y muestran los mismos eventos activos.
+
+8.1 Capturas del código de la interfaz
+
+Las capturas de esta sección deben mostrar el código fuente en Visual Studio Code, no la aplicación ejecutándose. Se redujeron los puntos a las 18 partes más importantes. En cada captura debe verse el nombre del archivo, los números de línea y el bloque completo relacionado con la funcionalidad.
+
+1. Configuración general de la aplicación:
+   `principal.py`, líneas 1-22. Este bloque contiene las importaciones de Streamlit, Pandas, Plotly y los modelos, además de `st.set_page_config()` y el título de SismoLab. Es la base visual y técnica de la pantalla principal.
+
+2. Carga del archivo y creación de los árboles:
+   `principal.py`, líneas 30-91. Capturar `reconstruir_bst()`, `cargar_json()`, la creación del AVL y la inserción inicial de cada `Event`. Este código demuestra cómo los datos persistentes se convierten en estructuras utilizables por la interfaz.
+
+3. Menú inicial y opciones de creación:
+   `principal.py`, líneas 106-124. El bloque muestra el mensaje de bienvenida, el botón `crear`, las columnas y las opciones para subir un JSON o llenar los datos manualmente. Esta captura representa la organización inicial de las acciones disponibles para el usuario.
+
+4. Carga de archivos JSON:
+   `principal.py`, líneas 123-154. Capturar `st.file_uploader`, la lectura del archivo, `guardar_json()` y la reconstrucción de los árboles. El bloque evidencia cómo la interfaz recibe información externa y actualiza el estado del sistema.
+
+5. Registro manual y validación de un evento:
+   `principal.py`, líneas 159-203. Capturar el formulario completo, los controles de identificador, magnitud, profundidad, epicentro, fecha, hora y estación. También debe verse la comprobación de duplicados, la creación de `Event`, la inserción en el AVL y el guardado de los datos.
+
+6. Configuración de los modos de ejecución:
+   `principal.py`, líneas 207-367. Agrupar en una captura amplia, o en dos capturas consecutivas, el modo estrés y el modo ráfaga. Se deben observar los `checkbox`, las variables de `session_state` y los estilos que cambian la apariencia de la aplicación.
+
+7. Eliminación de eventos:
+   `principal.py`, líneas 369-401. Capturar el botón de eliminación, la entrada del identificador, la llamada `arbol.delete(id)`, la eliminación del registro del listado y `guardar_json()`. Este bloque demuestra la conexión entre una acción de la interfaz y la actualización de los datos.
+
+8. Búsqueda por identificador:
+   `principal.py`, líneas 403-423. El código utiliza `arbol.research(id)` para consultar el AVL y muestra un mensaje según el resultado. La captura debe incluir tanto los controles de entrada como las ramas de respuesta exitosa y no encontrada.
+
+9. Revisión y seguimiento de eventos:
+   `principal.py`, líneas 426-482, y `pages/tablas_revisado.py`, líneas 65-116. Estos bloques deben capturarse juntos o de forma consecutiva: el primero consulta y marca el estado de revisión; el segundo separa los eventos revisados y pendientes y los muestra en tablas.
+
+10. Corrección de los datos de un evento:
+    `principal.py`, líneas 490-580. Capturar el selector de atributo, los controles para ingresar el nuevo valor y la llamada `data_correction()`. También debe verse la actualización del JSON, el cambio a pendiente de revisión y el mensaje de confirmación.
+
+11. Consultas de altura y nivel:
+    `principal.py`, líneas 583-624. Este bloque muestra cómo la interfaz busca el nodo y consulta `sismo.height` y `arbol.node_level(id)`. Es importante porque relaciona una consulta visual con propiedades internas del árbol.
+
+12. Navegación y mapa de sismos:
+    `principal.py`, líneas 628-755. Capturar la navegación lateral, la construcción de `datos_mapa`, el `DataFrame`, `px.scatter_geo()` y la llamada que presenta el gráfico. El código muestra cómo las coordenadas y magnitudes se convierten en una visualización.
+
+13. Reloj de simulación:
+    `principal.py`, líneas 757-810. Capturar el título del reloj, los botones para avanzar una hora, un día y una semana, y las llamadas que modifican el escenario. Esta sección demuestra que el tiempo del escenario es controlado desde la interfaz.
+
+14. Tabla general de sismos:
+    `pages/tabla_sismos.py`, líneas 65-78. Capturar el título, la lectura de `st.session_state.data`, la creación del `DataFrame` y `st.dataframe()`. Este bloque documenta la página destinada a consultar todos los eventos registrados.
+
+15. Visualización y operaciones del AVL:
+    `pages/arbol_avl.py`, líneas 94-146, 181-244 y 256-308. Dividir la captura si es necesario. Deben verse la construcción Graphviz, los controles de balanceo y archivado, las acciones de deshacer y rehacer, las métricas y los cuatro recorridos.
+
+16. Visualización y métricas del BST:
+    `pages/arbol_bst.py`, líneas 189-224. Capturar el diagrama Graphviz, las métricas de eventos, altura, raíz y hojas, además de la información histórica y los recorridos. Esta parte permite explicar la comparación entre BST y AVL desde la interfaz.
+
+17. Formulario y validación de reportes:
+    `pages/reportsv.py`, líneas 124-253. Capturar el formulario de reporte, sus campos, la validación de rangos y fechas, la creación de `Report` y la llamada `scenario.add_report(report)`. El bloque demuestra cómo se prepara y se incorpora un reporte a la cola.
+
+18. Búsqueda y procesamiento de la cola FIFO:
+    `pages/reportsv.py`, líneas 255-388. Capturar la búsqueda por características, `queue.peek()`, el botón de procesamiento, `scenario.process_next_report()` y las tablas de reportes pendientes y procesados. Esta es la captura principal para explicar el funcionamiento de la cola y sus resultados.
+
+9. Recomendaciones para las capturas
+
+Cada imagen debe mostrar el archivo abierto en Visual Studio Code y los números de línea visibles. No es necesario capturar la interfaz en ejecución. Cuando un bloque sea demasiado extenso, se pueden tomar dos capturas consecutivas, conservando el mismo número del punto y aclarando “parte 1” y “parte 2”. Se recomienda incluir algunos comentarios del código y evitar capturar líneas que no tengan relación con la funcionalidad explicada.

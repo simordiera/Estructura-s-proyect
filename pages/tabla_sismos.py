@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-#ESTE TAMPOCO M LO TOQUEN
+# Active-events table.
 
 
 color_fondo = "#6e9693"

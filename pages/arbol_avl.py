@@ -162,7 +162,7 @@ def create_scenario():
     return scenario
 
 
-# El arbol y la pila sobreviven a los reruns normales de Streamlit.
+# The tree and stack survive normal Streamlit reruns.
 if "archive_age_hours" not in st.session_state:
     st.session_state.archive_age_hours = 72
 if "modo_estres" not in st.session_state:
@@ -255,8 +255,8 @@ if insertion_order == "Clave ascendente":
 elif insertion_order == "Clave descendente":
     events.sort(key=lambda event: event.get_code(), reverse=True)
 
-# El AVL es la fuente de cambios; el BST usa este estado para reflejar los
-# mismos eventos sin copiar la topologia ni las rotaciones del AVL.
+# The AVL is the change source; the BST reflects the same events without
+# copying the AVL topology or rotations.
 st.session_state.avl_sync_state = {
     "active_events": deepcopy(events),
     "historic_events": deepcopy(tree.list_historic),
