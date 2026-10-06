@@ -13,7 +13,7 @@ color_fondo_pameter = "#FFFFFF"
 color_texto_pameter = "#000000"
 color_fondo_ar = "#FFFFFF"
 color_arriba="#6e9693"
-
+#stress mode
 if st.session_state.get("modo_estres", False):
     color_fondo = "#9c0720"
     color_texto = "#000000"
@@ -26,7 +26,7 @@ if st.session_state.get("modo_estres", False):
     color_fondo_ar = "#610000"
     color_arriba="#9c0720"
     st.sidebar.image("scr/pages/resources/estres.jpg", width=300)
-
+#rg mode
 if st.session_state.get("modo_rafaga", False):
     color_fondo = "#D8F3DC"
     color_texto = "#000000"
@@ -62,15 +62,15 @@ st.markdown(
     </style>
     """,
     unsafe_allow_html=True
-)
+) #html
 st.title("tabla de los sismos creados", text_alignment="center")
 if "data" not in st.session_state:
     st.session_state.data = []
-
+# Get the earthquake data stored in the session state.
 datos = st.session_state.data
-
-df = pd.DataFrame(datos)
-
+# Convert the earthquake data into a Pandas DataFrame.
+df = pd.DataFrame(datos) 
+# Display the DataFrame in the Streamlit application.
 event = st.dataframe(
     df,
     key="dataframe",

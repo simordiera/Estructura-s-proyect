@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-
+#page color
 color_fondo = "#6e9693"
 color_texto = "#000000"
 color_fondo2 = "#406e75"
@@ -12,7 +12,7 @@ color_fondo_pameter = "#FFFFFF"
 color_texto_pameter = "#000000"
 color_fondo_ar = "#FFFFFF"
 color_arriba="#6e9693"
-
+#stress mode
 if st.session_state.get("modo_estres", False):
     color_fondo = "#9c0720"
     color_texto = "#000000"
@@ -25,7 +25,7 @@ if st.session_state.get("modo_estres", False):
     color_fondo_ar = "#610000"
     color_arriba="#9c0720"
     st.sidebar.image("scr/pages/resources/estres.jpg", width=300)
-
+#rg mode
 if st.session_state.get("modo_rafaga", False):
     color_fondo = "#D8F3DC"
     color_texto = "#000000"
@@ -61,18 +61,20 @@ st.markdown(
     </style>
     """,
     unsafe_allow_html=True
-)
+) #hmtl
 st.title("Tablas revisados", text_alignment="center")
 
+# Create empty lists to store reviewed and unreviewed earthquakes.
 sismos_no_revisados = []
 sismos_revisados = []
 
+# Check if the AVL tree contains any nodes.
 if st.session_state.arbol.root is not None:
     eventos = st.session_state.arbol.in_order()
     for evento in eventos:
-
+        # Check if the earthquake has not been reviewed.
         if evento.get_review() == 0:
-
+            # Add the earthquake information to the unreviewed list.
             sismos_no_revisados.append({
                 "id": evento.get_id(),
                 "Magnitude": evento.get_magnitude(),
@@ -83,7 +85,7 @@ if st.session_state.arbol.root is not None:
             })
 
         else:
-
+            # Add the earthquake information to the reviewed list.
             sismos_revisados.append({
                 "id": evento.get_id(),
                 "Magnitude": evento.get_magnitude(),
@@ -96,11 +98,11 @@ if st.session_state.arbol.root is not None:
 
 
 st.subheader("tabla de los sismos revisados", text_alignment="center")
-if len(sismos_revisados) > 0:
+if len(sismos_revisados) > 0: # Check if there are any reviewed earthquakes.
     st.dataframe(
         pd.DataFrame(sismos_revisados),
         use_container_width=True
-    )
+    )  # Convert the reviewed earthquakes into a DataFrame and display them.
 else:
     st.info("No hay sismos revisados.")
 
