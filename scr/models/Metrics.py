@@ -1,5 +1,5 @@
 class Metrics:
-	# Contadores restaurables del escenario.
+	# Scenario counters that can be restored.
 	def __init__(self):
 		self.counters = {
 			"mass_archives": 0,

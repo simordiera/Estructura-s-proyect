@@ -21,7 +21,7 @@ def create_example_events():
         (600, 2.0, 20.0, (300.0, 400.0), "2026-09-18 15:30", "sta06"),
         (700, 2.0, 20.0, (300.0, 400.0), "2026-09-18 17:30", "sta07"),
         (800, 2.0, 20.0, (300.0, 400.0), "2026-09-18 18:30", "sta08"),
-        # Evento reciente de prioridad media para conservar una rama interna elegible.
+        # Recent medium-priority event keeps an internal branch eligible.
         (900, 4.8, 10.0, (300.0, 400.0), "2026-09-25 19:30", "sta09"),
     ]
     return [
@@ -151,7 +151,7 @@ def create_tree(insertion_order):
     return tree
 
 
-# El BST se reconstruye desde el estado vigente del AVL.
+# The BST uses the current shared scenario state.
 if "bst_insertion_order" not in st.session_state:
     st.session_state.bst_insertion_order = "Orden del archivo"
 if "bst_tree" not in st.session_state:
@@ -167,24 +167,24 @@ with st.sidebar:
     )
     st.info("El AVL es la fuente de datos. Las operaciones se realizan desde la página AVL.")
 
-if "data" not in st.session_state:
-    st.session_state.data = cargar_json()
+if "scenario" in st.session_state and hasattr(st.session_state.scenario, "bst"):
+    tree = st.session_state.scenario.bst
+else:
+    if "data" not in st.session_state:
+        st.session_state.data = cargar_json()
 
-tree = BST()
-
-for sismo in st.session_state.data:
-    evento = Event(
-        sismo["id"],
-        sismo["magnitude"],
-        sismo["depth"],
-        tuple(sismo["epicenter"]),
-        f'{sismo["datetime"]}',
-        sismo["station"],
-    )
-
-    tree.insert(evento)
-
-st.session_state.arbol_bst = tree
+    tree = BST()
+    for sismo in st.session_state.data:
+        evento = Event(
+            sismo["id"],
+            sismo["magnitude"],
+            sismo["depth"],
+            tuple(sismo["epicenter"]),
+            f'{sismo["datetime"]}',
+            sismo["station"],
+        )
+        tree.insert(evento)
+    st.session_state.arbol_bst = tree
 
 st.subheader("Arbol activo")
 st.info("Este árbol muestra la estructura BST sin balanceo, para compararla con el AVL.")

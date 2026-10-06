@@ -2,6 +2,7 @@ from datetime import datetime
 class Event:
 
     def __init__(self, id , magnitude, depth, epicenter, datetime, station, revisions=None):
+        # Validate event data and derive its zone, priority, and state.
         self.set_id(id)
         self.set_magnitude(magnitude)
         self.set_depth(depth)
@@ -92,7 +93,7 @@ class Event:
         if self._epicenter:
             x=self._epicenter[0]
             y=self._epicenter[1]
-            distance=1000/10 #10 in x and 10 in y. 1000/10=100, in total is 100 tile
+            distance=1000/10 # Each grid cell spans 100 km.
             populated_area_x=[100,300,600,800,200,500,700,100,200,500,800,200,500,700,900,100,400,700, 0,900]
             populated_area_y=[0,0,0,100,200,200,300,400,400,400,500,600,600,600,700,800,800,800,900,900]
 

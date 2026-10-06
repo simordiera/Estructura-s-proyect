@@ -19,8 +19,7 @@ class AVL:
             self.archive_age_hours = archive_age_hours
             self.stress_mode = stress_mode
 
-    # Estos métodos mantienen en un solo lugar los valores que usa el
-    # archivado automático y permiten que Scenario registre sus cambios.
+    # Keep automatic-archive settings in one place for Scenario.
     def set_archive_age_hours(self, archive_age_hours):
         if archive_age_hours <= 0:
             raise ValueError("La antigüedad mínima debe ser positiva.")
@@ -446,7 +445,7 @@ class AVL:
         value_key_time = value_key.value.get_datetime()
         value_key_magnitude=value_key.value.get_magnitude()
 
-        if (value_key_magnitude> node_key_magnitude): #El sismo de referencia debe tener una magnitud mayor.
+        if (value_key_magnitude> node_key_magnitude): # The reference event must be larger.
             if ( 0< (((node_key_time)-(value_key_time)).total_seconds() / 3600) <= 48): # Check whether the current earthquake occurred within the required 48-hour time range.
                 if (( ((((value_key_epicenter[0])-(node_key_epicenter[0]))**2) + (((value_key_epicenter[1])-(node_key_epicenter[1]))**2))**(1/2)) <= 40): # Check whether the distance between the two epicenters is at most 40 units.
 

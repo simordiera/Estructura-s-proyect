@@ -4,6 +4,7 @@ from datetime import timedelta
 
 class SubtreeArchiveManager:
     def __init__(self, tree):
+        # Operate on the active AVL owned by Scenario.
         self.tree = tree
 
     def _is_old_enough(self, event, archive_age_hours):
@@ -117,6 +118,7 @@ class SubtreeArchiveManager:
         self.tree.list_deleted = list(snapshot["list_deleted"])
 
     def archive_subtree(self, undo_stack, archive_age_hours=None):
+        # Detach one eligible subtree and preserve its operation snapshot.
         candidate = self.find_candidate(archive_age_hours)
         if candidate is None:
             return None

@@ -3,6 +3,7 @@ from collections import deque
 
 class ReportQueue:
 	def __init__(self):
+		# FIFO queue preserves report arrival order.
 		self.pending_reports = deque()
 
 	def add(self, item):

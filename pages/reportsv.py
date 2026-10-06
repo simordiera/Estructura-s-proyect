@@ -25,32 +25,32 @@ st.info(
 
 
 def get_scenario():
-    """Obtiene el escenario compartido por las páginas de Streamlit."""
+    """Return the scenario shared by Streamlit pages."""
     if "scenario" not in st.session_state:
         st.session_state.scenario = Scenario()
     return st.session_state.scenario
 
 
 def get_processed_reports():
-    """Guarda aparte los reportes que ya salieron de la cola."""
+    """Store reports that have left the queue."""
     if "processed_visual_reports" not in st.session_state:
         st.session_state.processed_visual_reports = []
     return st.session_state.processed_visual_reports
 
 
 def values_have_one_decimal(value):
-    """Comprueba que un número no tenga más de un decimal."""
+    """Check that a number has at most one decimal place."""
     return abs(value * 10 - round(value * 10)) < 0.000001
 
 
 def make_datetime_text(selected_date, selected_time):
-    """Convierte los controles de fecha y hora al formato ISO del proyecto."""
+    """Convert date and time controls to the project's ISO format."""
     selected_datetime = datetime.combine(selected_date, selected_time)
     return selected_datetime.strftime("%Y-%m-%dT%H:%M:%S")
 
 
 def get_event_rows(tree):
-    """Devuelve los sismos activos junto con la altura y el nivel de su nodo."""
+    """Return active events with their node height and level."""
     rows = []
 
     def visit(node, level):
@@ -73,7 +73,7 @@ def get_event_rows(tree):
 
 
 def event_matches(event_row, criterion, value):
-    """Comprueba si un sismo coincide con el criterio seleccionado."""
+    """Check whether an event matches the selected criterion."""
     event = event_row["Evento"]
 
     if criterion == "Magnitud":
@@ -99,7 +99,7 @@ def event_matches(event_row, criterion, value):
 
 
 def event_to_search_row(event_row):
-    """Convierte un sismo y su nodo en una fila para mostrar resultados."""
+    """Convert an event and its node into a result row."""
     event = event_row["Evento"]
     return {
         "Identificador": f"SIS-{event.get_id():06d}",

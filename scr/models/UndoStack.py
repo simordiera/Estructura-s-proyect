@@ -1,10 +1,11 @@
 class UndoStack:
 	def __init__(self):
+		# Keep independent undo and redo histories.
 		self.undo_actions = []
 		self.redo_actions = []
 
 	def push(self, operation):
-		# Una 
+		# Push a new operation and clear stale redo actions.
 		self.undo_actions.append(operation)
 		self.redo_actions.clear()
 

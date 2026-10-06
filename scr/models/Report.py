@@ -8,7 +8,7 @@ from scr.models.Event import Event
 
 @dataclass
 class Report:
-    """Datos completos de un reporte que todavía no ha sido procesado."""
+    """Complete data for a report that has not been processed."""
 
     identifier: int
     magnitude: float
@@ -22,7 +22,7 @@ class Report:
     message: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
-        """Devuelve los datos en un formato sencillo para la tabla."""
+        """Return report data in a table-friendly format."""
         return {
             "Identificador": f"SIS-{self.identifier:06d}",
             "Magnitud": self.magnitude,
@@ -38,7 +38,7 @@ class Report:
         }
 
     def is_valid(self) -> bool:
-        """Hace una validación básica de los datos del reporte."""
+        """Perform basic report-data validation."""
         try:
             datetime.fromisoformat(self.occurrence_datetime)
         except ValueError:
@@ -55,7 +55,7 @@ class Report:
         )
 
     def to_event(self) -> Event:
-        """Convierte el reporte en el tipo de evento que usa el AVL."""
+        """Convert the report into the event type used by the AVL."""
         return Event(
             self.identifier,
             self.magnitude,
@@ -67,7 +67,7 @@ class Report:
         )
 
     def has_same_event_data(self, event: Event) -> bool:
-        """Compara datos físicos sin usar la estación como criterio."""
+        """Compare physical data without using the station as a criterion."""
         return (
             self.magnitude == event.get_magnitude()
             and self.depth == event.get_depth()

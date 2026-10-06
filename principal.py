@@ -9,9 +9,9 @@ from scr.models.AVL import AVL
 from scr.models.BST import BST
 from scr.models.Scenario import Scenario
 from datetime import datetime, timedelta
-#NO FUN IONA NADA, GAS, NO ME TOQUEN EL CODIGO
+# Main Streamlit page.
 
-#configuracion visual de la pag
+# Configure the page layout.
 st.set_page_config(
     page_title="SismoLab",
     page_icon= ":leaves:",
@@ -48,14 +48,14 @@ def reconstruir_bst(data):
         nuevo_bst.insert(evento)
 
     return nuevo_bst
-# CARGAR LOS DATOS DEL JSON
+# Load data from JSON.
 if "data" not in st.session_state:
         st.session_state.data = cargar_json()
 
 if "arbol_bst" not in st.session_state:
     st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
 
-# CREAR Y RECONSTRUIR EL AVL
+# Create or rebuild the AVL.
 if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or []) == 0:
     st.session_state.arbol = AVL()
 
@@ -71,7 +71,7 @@ if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or [
         )
         st.session_state.arbol.insert(evento)
 
-# RECUPERAR EL ARBOL
+# Restore the active tree state.
 arbol = st.session_state.arbol
 arbol_bst = st.session_state.arbol_bst
 for id_eliminado in arbol.list_deleted:
@@ -86,11 +86,16 @@ for id_eliminado in arbol.list_deleted:
 if "scenario" not in st.session_state:
     st.session_state.scenario = Scenario()
 
-st.session_state.scenario.tree = st.session_state.arbol
+st.session_state.scenario.attach_trees(
+    st.session_state.arbol,
+    st.session_state.arbol_bst,
+)
+st.session_state.scenario.sync_comparison_tree()
+st.session_state.arbol_bst = st.session_state.scenario.bst
 
-# MOSTRAR INFORMACIÓN
+# Display the main information.
 recorrido = arbol.in_order()
-#Markdown sirve pa utilizar css y html, o para mostrar texto, el unsafe permite que el streamlit permita el css
+# Markdown enables page styles and formatted HTML.
 st.markdown("""
 <style>
 div.stButton > button {
@@ -108,17 +113,17 @@ div.stButton > button {
 
 
 st.subheader("Bienvenido a SismoLab, aquí puedes registrar y analizar sismos de manera eficiente y visual.", text_alignment="center")
-# boton pa crear
+# Create-event controls.
 st.write("Si deseas crear un nuevo registro de sismos, presiona el botón 'crear'.")
 if st.button("crear"):
     st.session_state.show_options = True
 
-# mostrar los otros dos botoncitos
+# Show the upload and manual-entry options.
 if st.session_state.show_options:
-    #divede ls cosas en dos columnas, para que así los botoncitos queden al lado.
+    # Place the two input options side by side.
     col1, col2 = st.columns(2)
 
-    #oprimir boton para poder cargar un archivo de tipo JSON (TENGO QUE CORREGIR LO DE QUE SE CIERRA SOLO)
+    # Open the JSON upload control.
     with col1:
         if st.button("Subir archivo JSON"):
             st.session_state.show_upload = True
@@ -132,7 +137,7 @@ if st.session_state.show_options:
                 data = json.load(uploaded_file)
                 st.session_state.data = data
                 guardar_json(st.session_state.data)
-                # RECONSTRUIR EL AVL
+                # Rebuild the active tree.
                 st.session_state.arbol = AVL()
 
                 for sismo in st.session_state.data:
@@ -149,12 +154,15 @@ if st.session_state.show_options:
                     st.session_state.arbol.insert(evento)
                 st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
                 arbol=st.session_state.arbol
+                st.session_state.scenario.attach_trees(
+                    st.session_state.arbol,
+                    st.session_state.arbol_bst,
+                )
                 st.success("Archivo cargado correctamente :)")
-                #st.session_state.show_options = False
-                #st.session_state.show_upload = False
+                # Keep these controls open until the rerun completes.
                 st.rerun()
 
-    #segundo boton para llenar los datos manalmente(tengo que )
+    # Open the manual-entry form.
     with col2:
         if st.button("Llenar datos manualmente"):
             st.session_state.show_form = True
@@ -181,6 +189,7 @@ if st.session_state.show_options:
                         evento = Event(id,magnitude,depth,(x, y),fecha_hora,stations)
                         
                         arbol.insert(evento)
+                        st.session_state.scenario.sync_comparison_tree()
                         st.session_state.data.append ({
                             "id": id,
                             "magnitude": magnitude,
@@ -193,20 +202,24 @@ if st.session_state.show_options:
 
                         guardar_json(st.session_state.data)
                         st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
+                        st.session_state.scenario.attach_trees(
+                            st.session_state.arbol,
+                            st.session_state.arbol_bst,
+                        )
                         st.session_state.show_options = False
                         st.session_state.show_form = False
                         st.rerun()
-#cambiar de color la pag si hay mas de 10 sismos, pa que se vea mas dramatico
+# Change the page theme for stress mode.
 if "modo_estres" not in st.session_state:
     st.session_state["modo_estres"] = False
 def cambiar_theme(): 
     st.session_state["modo_estres"] = st.session_state["stress_checkbox"] 
 if "stress_checkbox" not in st.session_state:
     st.session_state["stress_checkbox"] = st.session_state["modo_estres"]
-#MODOOO ESTREEEES
+# Stress mode.
 with st.sidebar:
     st.title("seleccione aquí para el activar el modo estres")
-    color_fondo="000000" #valores feiks para poder cambiar el color de la pag, si no se hace esto, el streamlit no deja cambiar el color de la pag
+    color_fondo="000000" # Placeholder keeps the theme renderer active.
     color_texto="000000"
     color_fondo2="000000"
     color_fondo3="000000"
@@ -281,7 +294,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-#MODO RAFAGA, YEI
+# Burst-report mode.
 if "modo_rafaga" not in st.session_state:
     st.session_state["modo_rafaga"] = False
 def cambiar_theme(): 
@@ -290,7 +303,7 @@ if "rg_checkbox" not in st.session_state:
     st.session_state["rg_checkbox"] = st.session_state["modo_rafaga"]
 with st.sidebar:
     st.title("seleccione aquí para el activar el modo rafaga")
-    color_fondo="000000" #valores feiks para poder cambiar el color de la pag, si no se hace esto, el streamlit no deja cambiar el color de la pag
+    color_fondo="000000" # Placeholder keeps the theme renderer active.
     color_texto="000000"
     color_fondo2="000000"
     color_fondo3="000000"
@@ -365,7 +378,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-#BOTON PA ELIMINAR
+# Delete-event controls.
 st.write("Si deseas eliminar un registro de sismos, presiona el botón 'Eliminar sismo'.")
 if "show_delete" not in st.session_state:
     st.session_state.show_delete = False
@@ -392,19 +405,20 @@ if st.session_state.get("show_delete", False):
     ]
 
             guardar_json(st.session_state.data)
-            st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
+            st.session_state.scenario.sync_comparison_tree()
+            st.session_state.arbol_bst = st.session_state.scenario.bst
 
     cerrar=st.checkbox("cerrar busqueda", key="close_delete_search")
     if cerrar:
         st.session_state.show_delete = False
         st.rerun()
 
-#BOTON QUE CONTIENE OTRO BOTON
+# Search controls.
 st.write("Boton para buscar un sismo por su ID.")
 if st.button("Buscar por id"):
     st.session_state.show_search = True
 
-#BOTON QUE CONTIENE EL COSO DE buscar SI EL METODO ESTA O NO
+# Search by identifier.
 if st.session_state.get("show_search", False):
     id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="search_id_input")
     if st.button("esta el sismo?"):
@@ -419,7 +433,7 @@ if st.session_state.get("show_search", False):
         st.session_state.show_search = False
         st.rerun()
 
-#cosillo pa revision definitivo
+# Review controls.
 st.write("revisar un sismo o ver si esta revisado")
 if "show_review" not in st.session_state:
     st.session_state.show_review = False
@@ -439,7 +453,7 @@ if st.session_state.get("show_review", False):
         if st.button("Revisar sismo"):
             st.session_state.show_do_review = True
             st.session_state.show_check_review = False
-    # VER SI EL SISMO ESTÁ REVISADO
+    # Check the review status.
     if st.session_state.get("show_check_review", False):
         id = st.number_input("ingrese el numero identificador del sismo que desea buscar",step=1,min_value=1,max_value=999999,key="review_id_input")
         if st.button("revisar", key="check_review_button"):
@@ -452,7 +466,7 @@ if st.session_state.get("show_review", False):
                     st.write("El sismo con ID:",sismo.value.get_id(),"no ha sido revisado.")
                 else:
                     st.write("El sismo con ID:",sismo.value.get_id(),"ya ha sido revisado.")
-    # REVISAR EL SISMO
+    # Mark the event as reviewed.
     if st.session_state.get("show_do_review", False):
         id = st.number_input("ingrese el numero identificador del sismo que desea revisar",step=1,min_value=1,max_value=999999,key="do_review_id_input")
         if st.button("Revisar sismo", key="do_review_button"):
@@ -464,7 +478,8 @@ if st.session_state.get("show_review", False):
                         sismo_json["revisions"] = sismo.value.get_revisions()
                         break
                 guardar_json(st.session_state.data)
-                st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
+                st.session_state.scenario.sync_comparison_tree()
+                st.session_state.arbol_bst = st.session_state.scenario.bst
             if resultado is None:
                 st.warning("No se encontró ningún sismo con ese ID.")
             else:
@@ -482,7 +497,7 @@ if st.session_state.get("show_review", False):
         st.session_state.show_check_review = False
         st.session_state.show_do_review = False
         st.rerun()
-#boton pa corregir un sismito
+# Correction controls.
 st.write("corregir un sismo")
 if "show_correct" not in st.session_state:
     st.session_state.show_correct = False
@@ -566,6 +581,10 @@ if st.session_state.show_correct_2:
             st.session_state.arbol_bst = reconstruir_bst(
                 st.session_state.data
             )
+            st.session_state.scenario.attach_trees(
+                st.session_state.arbol,
+                st.session_state.arbol_bst,
+            )
             st.success("¡Sismo corregido correctamente!")
             st.session_state.show_correct = False
             st.session_state.show_correct_2 = False
@@ -581,7 +600,7 @@ if st.session_state.show_correct:
         st.session_state.sismo_encontrado = False
         st.rerun()
 
-#botoncito pa altura de nodo que busque
+# Node-height query.
 st.write("encontrar la altura de un sismo.")
 if "show_height" not in st.session_state:
     st.session_state.show_height = False
@@ -602,7 +621,7 @@ if st.session_state.get("show_height", False):
             st.session_state.show_height = False
             st.rerun()
 
-#botoncito pa nivel de nodo
+# Node-level query.
 st.write("encontrar el nivel de un sismo.")
 if "show_level" not in st.session_state:
     st.session_state.show_level = False
@@ -623,11 +642,49 @@ if st.session_state.get("show_level", False):
         st.session_state.show_level = False
         st.rerun()
 
+# Access-budget query.
+st.write("consultar el presupuesto de acceso de un sismo.")
+if "show_budget" not in st.session_state:
+    st.session_state.show_budget = False
+if st.button("Presupuesto de acceso"):
+    st.session_state.show_budget = True
+if st.session_state.get("show_budget", False):
+    budget_id = st.number_input(
+        "ingrese el numero identificador del sismo que desea buscar",
+        step=1,
+        min_value=1,
+        max_value=999999,
+        key="budget_id_input",
+    )
+    budget_limit = st.number_input(
+        "ingrese el límite de nivel permitido",
+        min_value=0,
+        step=1,
+        key="budget_limit_input",
+    )
+    if st.button("Consultar presupuesto", key="budget_button"):
+        sismo = arbol.research(budget_id)
+        if sismo is None:
+            st.warning("No se encontró ningún sismo con ese ID.")
+        else:
+            level = arbol.node_level(budget_id)
+            result = arbol.budget(budget_limit, budget_id)
+            st.write("Presupuesto de acceso:")
+            st.write(
+                f"ID: {sismo.value.get_id()}, "
+                f"Nivel: {level}, Límite: {budget_limit}"
+            )
+            st.success(result.capitalize())
+    cerrar = st.checkbox("cerrar presupuesto", key="close_budget_search")
+    if cerrar:
+        st.session_state.show_budget = False
+        st.rerun()
 
-#aparece en el menu cuando se meten en la pag prin
+
+# Navigation hint.
 st.sidebar.success('Aqui puedes navegar a las diferentes paginas del proyecto')
 
-#mapaaaaaa
+# Event map.
 st.header("Mapa de sismos")
 st.info("Puedes hacer zoom y mover el mapa para explorar los sismos registrados. Los puntos representan la ubicación de cada sismo, y su tamaño y color reflejan la magnitud del evento.")
 
@@ -647,7 +704,7 @@ if "data" in st.session_state and len(st.session_state.data) > 0:
         })
     data = pd.DataFrame(datos_mapa)
 
-    # tamaño pa los puntos (que tan grandes son), tiene que ser positivo
+    # Use a positive marker size for every magnitude.
     data["tamaño"] = data["magnitude"].abs() + 1
 
     fig = px.scatter_geo(
@@ -655,13 +712,13 @@ if "data" in st.session_state and len(st.session_state.data) > 0:
         lat="lat",
         lon="lon",
 
-        # Nombre que aparece al pasar el mouse
+        # Label shown on hover.
         hover_name="station",
-        # Nombre que aparece directamente sobre el punto
+        # Label shown next to the point.
         text="station",
-        # El tamaño depende de la magnitud
+        # Marker size follows magnitude.
         size="tamaño",
-        #el color  dependiendo de la magnitud del sismo, mientras mas grande el numero, mas azul es
+        # Color intensity follows magnitude.
         color="magnitude",
         hover_data={
             "id": True,

@@ -6,12 +6,14 @@ RUTA = os.path.join(
     "datos.json"
 )
 
+# Save the current data collection as JSON.
 def guardar_json(data, nombre=RUTA):
 
     with open(nombre, "w", encoding="utf-8") as archivo:
         json.dump(data, archivo, indent=4, ensure_ascii=False)
 
 
+# Load JSON data or return an empty collection when the file is missing.
 def cargar_json(nombre=RUTA):
 
     if not os.path.exists(nombre):

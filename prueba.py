@@ -82,7 +82,7 @@ for event in items:
 
 print (" ")
 
-tree.data_correction(500, {"magnitud": (4.5)}) #correccion de un sismo
+tree.data_correction(500, {"magnitud": (4.5)}) # Correct an event.
 
 items = tree.breadth_first()
 for event in items:
@@ -90,7 +90,7 @@ for event in items:
 
 print (" ")
 
-tree.review(500) #revision de un sismo
+tree.review(500) # Mark an event as reviewed.
 
 tree.balance()
 
@@ -101,8 +101,8 @@ for event in items:
 print (" ")
 
 
-#nuevas 2 funciones:
-nodo_encontrado = tree.research(100) #buscar un nodo especifico
+# Test the search and comparison helpers.
+nodo_encontrado = tree.research(100) # Find a specific node.
 
 if nodo_encontrado is not None:
     print("Sismo encontrado:", nodo_encontrado.value)
@@ -112,7 +112,7 @@ else:
 
 
 
-result1 = tree.compare(100) #replicas del 100
+result1 = tree.compare(100) # Find possible replicas.
 
 print("")
 
@@ -141,7 +141,7 @@ for event in items:
 
 print(" ")
 
-print(tree.node_level(500)) #nivel del nodo 500
+print(tree.node_level(500)) # Print the node level.
 
-resultado=(tree.budget(3, 500)) #presupuesto del nodo 500
+resultado=(tree.budget(3, 500)) # Check the access budget.
 print(resultado)
