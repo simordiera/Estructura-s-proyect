@@ -38,10 +38,6 @@ if "modo_estres" not in st.session_state:
 def cambiar_theme(): 
     # Save the current checkbox value as the application's stress mode state.
     st.session_state["modo_estres"] = st.session_state["stress_checkbox"]
-    if "arbol" in st.session_state:
-        # Enable or disable AVL balancing according to the selected stress mode
-        st.session_state.arbol.stress_mode(
-            st.session_state["modo_estres"])
 # Initialize the stress mode checkbox with the current stress mode value.
 if "stress_checkbox" not in st.session_state:
     st.session_state["stress_checkbox"] = st.session_state["modo_estres"] # Keep the checkbox synchronized with the stored stress mode.
@@ -73,7 +69,7 @@ if "arbol_bst" not in st.session_state:
 
 # Create or rebuild the AVL.
 if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or []) == 0:
-    st.session_state.arbol = AVL( stress_mode=st.session_state["modo_estres"])
+    st.session_state.arbol = AVL()
 
     for sismo in st.session_state.data:
         evento = Event(
@@ -91,7 +87,7 @@ if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or [
 # Restore the active tree state.
 arbol = st.session_state.arbol
 arbol_bst = st.session_state.arbol_bst
-arbol.stress_mode(st.session_state["modo_estres"])
+
 for id_eliminado in arbol.list_deleted:
     if arbol.research(id_eliminado) is not None:
         earthquake = arbol.research(id_eliminado)
@@ -155,7 +151,7 @@ if st.session_state.show_options:
                 st.session_state.data = data
                 guardar_json(st.session_state.data)
                 # REBUILD AVL
-                st.session_state.arbol = AVL( stress_mode=st.session_state["modo_estres"])
+                st.session_state.arbol = AVL()
 
                 for sismo in st.session_state.data:
                     evento = Event(
