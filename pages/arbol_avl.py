@@ -147,43 +147,61 @@ def create_scenario():
     data=cargar_json()
     for sismo in data:
         event = Event(
-            sismo["identificador"],
-            sismo["magnitud"],
-            sismo["profundidad"],
-            tuple(sismo["coordenadas"]),
-            f'{sismo["fecha"]}T{sismo["hora"]}',
-            sismo["estación"],
+            sismo["id"],
+            sismo["magnitude"],
+            sismo["depth"],
+            tuple(sismo[""]),
+            sismo["datetime"],
+            sismo["station"],
         )
         scenario.create_event(event)
 
     # Example data is the initial state, not a user action.
     scenario.undo_stack.undo_actions.clear()
     scenario.undo_stack.redo_actions.clear()
-    scenario.tree.balance()
     return scenario
 
 
 # The tree and stack survive normal Streamlit reruns.
 if "archive_age_hours" not in st.session_state:
     st.session_state.archive_age_hours = 72
-if "stress_mode" not in st.session_state:
-    st.session_state.stress_mode = False
+if "modo_estres" not in st.session_state:
+    st.session_state.modo_estres = False
 if "avl_insertion_order" not in st.session_state:
     st.session_state.avl_insertion_order = "Orden del archivo"
 if "avl_balance_tree" not in st.session_state:
     st.session_state.avl_balance_tree = True
 if "scenario" not in st.session_state:
-    st.session_state.scenario = create_scenario()
+    st.session_state.scenario = Scenario(
+        stress_mode=st.session_state["modo_estres"]
+    )
 
 scenario = st.session_state.scenario
-if "arbol" in st.session_state:
-    scenario.attach_trees(
-        st.session_state.arbol,
-        st.session_state.get("arbol_bst"),
-    )
+
+if "arbol" not in st.session_state:
+    data = cargar_json()
+
+    for sismo in data:
+        evento = Event(
+            sismo["id"],
+            sismo["magnitude"],
+            sismo["depth"],
+            tuple(sismo["epicenter"]),
+            sismo["datetime"],
+            sismo["station"],
+            sismo.get("revisions", 1)
+        )
+
+        scenario.create_event(evento)
+
+    st.session_state.arbol = scenario.tree
+
+else:
+    scenario.tree = st.session_state.arbol
+
 tree = scenario.tree
 
-
+tree.stress_mode(st.session_state["modo_estres"])
 with st.sidebar:
     st.header("Ejemplo")
     insertion_order = st.selectbox(
@@ -191,11 +209,6 @@ with st.sidebar:
         ("Orden del archivo", "Clave ascendente", "Clave descendente"),
         key="avl_insertion_order",
     )
-    balance_tree = st.checkbox(
-        "Aplicar balanceo AVL",
-        key="avl_balance_tree",
-    )
-    st.session_state.stress_mode = not balance_tree
     archive_age_hours = st.number_input(
         "Antigüedad mínima T (horas)",
         min_value=1,
@@ -204,8 +217,6 @@ with st.sidebar:
     )
     if tree.archive_age_hours != archive_age_hours:
         scenario.change_parameters({"T": archive_age_hours})
-    if tree.stress_mode != st.session_state.stress_mode:
-        scenario.set_stress_mode(st.session_state.stress_mode)
     archive_candidate = scenario.archive_manager.find_candidate()
     if archive_candidate:
         st.info(
@@ -256,11 +267,10 @@ st.session_state.avl_sync_state = {
     "archive_age_hours": tree.archive_age_hours,
 }
 
-st.subheader("Árbol activo")
-if not balance_tree:
-    st.warning("El árbol se muestra después de insertar, sin ejecutar la recuperación de balanceo.")
+if st.session_state.get("modo_estres", False):
+    st.success("Modo estrés activado: mostrando AVL sin balancear.")
 else:
-    st.success("El balanceo se aplicó después de las inserciones del ejemplo.")
+    st.info("Modo estrés desactivado: mostrando AVL.")
 
 left_column, right_column = st.columns([2, 1])
 with left_column:
