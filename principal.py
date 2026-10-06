@@ -30,7 +30,16 @@ if "show_search" not in st.session_state:
     st.session_state.show_search = False
 if "show_upload" not in st.session_state:
     st.session_state.show_upload = False
-
+if "modo_estres" not in st.session_state:
+    st.session_state["modo_estres"] = False
+def cambiar_theme(): 
+    st.session_state["modo_estres"] = st.session_state["stress_checkbox"]
+    if "arbol" in st.session_state:
+        st.session_state.arbol.stress_mode(
+            st.session_state["modo_estres"]
+        )
+if "stress_checkbox" not in st.session_state:
+    st.session_state["stress_checkbox"] = st.session_state["modo_estres"]
 
 def reconstruir_bst(data):
     nuevo_bst = BST()
@@ -74,6 +83,7 @@ if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or [
 # RECUPERAR EL ARBOL
 arbol = st.session_state.arbol
 arbol_bst = st.session_state.arbol_bst
+
 for id_eliminado in arbol.list_deleted:
     if arbol.research(id_eliminado) is not None:
         earthquake = arbol.research(id_eliminado)
@@ -162,15 +172,15 @@ if st.session_state.show_options:
 
             with st.form("my_form"):
                 st.title("LLena la información del sismo :)")
-                id = st.number_input("ingrese el identificador",step=1,min_value=1,max_value=999999, key="id_input")
-                magnitude = st.number_input("ingrese la magnitud",min_value=-2.0,max_value=10.0,step=0.1)
-                depth = st.number_input("ingrese la profundidad",min_value=0.0,max_value=700.0,step=0.1)
-                x = st.number_input("coordenada X",min_value=0,max_value=1000)
-                y = st.number_input("coordenada Y", min_value=0,  max_value=1000)
+                id = st.number_input("ingrese el identificador",step=1,min_value=1,max_value=999999, key="id_input", value=None,placeholder="identificador...")
+                magnitude = st.number_input("ingrese la magnitud",min_value=-2.0,max_value=10.0,step=0.1, value=None,placeholder="magnitud...")
+                depth = st.number_input("ingrese la profundidad",min_value=0.0,max_value=700.0,step=0.1, value=None, placeholder="profundidad...")
+                x = st.number_input("coordenada X",min_value=0,max_value=1000,value=None, placeholder="coordenada..." )
+                y = st.number_input("coordenada Y", min_value=0,  max_value=1000, value=None, placeholder="cordenada...")
                 date = st.date_input("fecha", max_value=pd.Timestamp.now().date())
                 time = st.time_input("hora")
-                stations = st.text_input("estaciones")
-                report_location = st.text_input("lugar del reporte")
+                stations = st.text_input("estaciones", value=None, placeholder="estacion...")
+                report_location = st.text_input("lugar del reporte", value=None, placeholder="lugar...")
                 submitted = st.form_submit_button("Subir archivo")
 
                 if submitted:
@@ -197,12 +207,6 @@ if st.session_state.show_options:
                         st.session_state.show_form = False
                         st.rerun()
 #cambiar de color la pag si hay mas de 10 sismos, pa que se vea mas dramatico
-if "modo_estres" not in st.session_state:
-    st.session_state["modo_estres"] = False
-def cambiar_theme(): 
-    st.session_state["modo_estres"] = st.session_state["stress_checkbox"] 
-if "stress_checkbox" not in st.session_state:
-    st.session_state["stress_checkbox"] = st.session_state["modo_estres"]
 #MODOOO ESTREEEES
 with st.sidebar:
     st.title("seleccione aquí para el activar el modo estres")
@@ -372,16 +376,9 @@ if "show_delete" not in st.session_state:
 if st.button("Eliminar sismo"):
     st.session_state.show_delete = True
 if st.session_state.get("show_delete", False):
-    id=st.number_input("ingrese el numero identificador del sismo que desea eliminar", step=1, min_value=1, max_value=999999, key="delete_id_input")
+    id=st.number_input("ingrese el numero identificador del sismo que desea eliminar", step=1, min_value=1, max_value=999999, key="delete_id_input", placeholder="identificador...")
     if st.button("eliminar definitivamente"):
-        st.write("IDs AVL:", [n.get_id() for n in arbol.in_order()])
-        st.write("Eliminados:", arbol.list_deleted)
-
         result=arbol.delete(id)
-        st.write("ID que intento eliminar:", id)
-        st.write("Resultado delete:", result)
-        st.write("IDs en data:", [s["id"] for s in st.session_state.data])
-        st.write("IDs en AVL:", [n.get_id() for n in arbol.in_order()])
         if result is None:
             st.write("No se encontró ningún sismo con ese ID.")
         else:
@@ -406,9 +403,8 @@ if st.button("Buscar por id"):
 
 #BOTON QUE CONTIENE EL COSO DE buscar SI EL METODO ESTA O NO
 if st.session_state.get("show_search", False):
-    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="search_id_input")
+    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="search_id_input", placeholder="identificador...")
     if st.button("esta el sismo?"):
-        st.write(arbol.root)
         result= arbol.research(id)
         if result is not None:
             st.write("Esta en el arbol")
@@ -441,7 +437,7 @@ if st.session_state.get("show_review", False):
             st.session_state.show_check_review = False
     # VER SI EL SISMO ESTÁ REVISADO
     if st.session_state.get("show_check_review", False):
-        id = st.number_input("ingrese el numero identificador del sismo que desea buscar",step=1,min_value=1,max_value=999999,key="review_id_input")
+        id = st.number_input("ingrese el numero identificador del sismo que desea buscar",step=1,min_value=1,max_value=999999,key="review_id_input", placeholder="identificador...")
         if st.button("revisar", key="check_review_button"):
             sismo = arbol.research(id)
             if sismo is None:
@@ -454,7 +450,7 @@ if st.session_state.get("show_review", False):
                     st.write("El sismo con ID:",sismo.value.get_id(),"ya ha sido revisado.")
     # REVISAR EL SISMO
     if st.session_state.get("show_do_review", False):
-        id = st.number_input("ingrese el numero identificador del sismo que desea revisar",step=1,min_value=1,max_value=999999,key="do_review_id_input")
+        id = st.number_input("ingrese el numero identificador del sismo que desea revisar",step=1,min_value=1,max_value=999999,key="do_review_id_input", placeholder="Identificador...")
         if st.button("Revisar sismo", key="do_review_button"):
             resultado = arbol.review(id)
             if resultado:
@@ -509,19 +505,19 @@ if st.session_state.show_correct_2:
         f"¿Qué desea corregir del sismo con ID: {id}?",
         options=["Magnitud","Profundidad","Coordenada x","Coordenada y","Fecha","hora","Estación"])
     if opcion == "Magnitud":
-        new_sismo = st.number_input("Ingrese la nueva magnitud",min_value=-2.0,max_value=10.0,step=0.1,key="new_magnitude_input")
+        new_sismo = st.number_input("Ingrese la nueva magnitud",min_value=-2.0,max_value=10.0,step=0.1,key="new_magnitude_input", value=None, placeholder="magnitud...")
     elif opcion == "Profundidad":
-        new_sismo = st.number_input("Ingrese la nueva profundidad",min_value=0.0,max_value=700.0,step=0.1,key="new_depth_input")
+        new_sismo = st.number_input("Ingrese la nueva profundidad",min_value=0.0,max_value=700.0,step=0.1,key="new_depth_input", value=None, placeholder="profundidad...")
     elif opcion == "Coordenada x":
-        new_sismo = st.number_input("Ingrese la nueva coordenada x",min_value=0,max_value=1000,step=1,key="new_x_input")
+        new_sismo = st.number_input("Ingrese la nueva coordenada x",min_value=0,max_value=1000,step=1,key="new_x_input", value=None, placeholder="coordenada...")
     elif opcion == "Coordenada y":
-        new_sismo = st.number_input("Ingrese la nueva coordenada y",min_value=0,max_value=1000,step=1,key="new_y_input")
+        new_sismo = st.number_input("Ingrese la nueva coordenada y",min_value=0,max_value=1000,step=1,key="new_y_input", value=None, placeholder="coordenada...")
     elif opcion == "Fecha":
         new_sismo = st.date_input("Ingrese la nueva fecha",max_value=pd.Timestamp.now().date(),key="new_date_input")
     elif opcion == "hora":
         new_sismo = st.time_input("Ingrese la nueva hora",key="new_time_input")
     elif opcion == "Estación":
-        new_station = st.text_input("Ingrese la nueva estación",key="new_station_input")
+        new_station = st.text_input("Ingrese la nueva estación",key="new_station_input", value=None, placeholder="estacion...")
     if st.button("Corregir definitivamente"):
         sismo_json_actual = next(
             s for s in st.session_state.data
@@ -588,7 +584,7 @@ if "show_height" not in st.session_state:
 if st.button("Altura del nodo"):
     st.session_state.show_height = True
 if st.session_state.get("show_height", False):
-    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="height_id_input")
+    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="height_id_input", value=None, placeholder="identificador...")
     if st.button("altura"):
         sismo=arbol.research(id)
         if sismo is None:
@@ -609,7 +605,7 @@ if "show_level" not in st.session_state:
 if st.button("Nivel del nodo"):
     st.session_state.show_level = True
 if st.session_state.get("show_level", False):
-    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="level_id_input")
+    id=st.number_input("ingrese el numero identificador del sismo que desea buscar", step=1, min_value=1, max_value=999999, key="level_id_input", value=None, placeholder="identificador...")
     if st.button("nivel"):
         sismo=arbol.research(id)
         if sismo is None:
@@ -757,6 +753,47 @@ if arbol.list_deleted:
             )
 else:
     st.info("No hay sismos eliminados.")
+
+st.markdown("""
+    <div style="
+        background-color: #F0FDFA;
+        padding: 22px;
+        border-radius: 15px;
+        border-left: 6px solid #00BFA6;
+        margin-bottom: 15px;
+    ">
+        <h3 style="color: #1B4332; margin: 0;">
+            Busqueda de réplicas
+        </h3>
+        <p style="color: #386641; margin-bottom: 0;">
+            Ingrese el id del sismo para encontrar las posibles réplicas.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
+id_referencia = st.number_input(
+    "Escriba el id del sismo", min_value=1,max_value=999999,step=1,value=None,placeholder="id del sismo del sismo...")
+if id_referencia is not None:
+    replicas = st.session_state.arbol.compare(int(id_referencia))
+    if replicas is None:
+        replicas = []
+    if replicas:
+        st.success(f"Se encontraron {len(replicas)} posibles réplicas.")
+        datos_replicas = []
+        for replica in replicas:
+            sismo = replica.value
+            datos_replicas.append({
+                "id": sismo.get_id(),
+                "magnitude": sismo.get_magnitude(),
+                "depth": sismo.get_depth(),
+                "epicenter": str(sismo.get_epicenter()),
+                "datetime": str(sismo.get_datetime()),
+                "station": sismo.get_station()
+            })
+
+        st.dataframe(datos_replicas,use_container_width=True,hide_index=True)
+    else:
+        st.info(
+            "No se encontraron réplicas para ese ID. ")
 
 st.title("Reloj")
 if "simulation_clock" not in st.session_state:

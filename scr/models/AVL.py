@@ -17,9 +17,7 @@ class AVL:
             self.metrics = Metrics()
             self.simulation_clock = simulation_clock or datetime.now()
             self.archive_age_hours = archive_age_hours
-            self.stress_mode = stress_mode
-            self.stress = False
-
+            self.stress = stress_mode
     # Estos métodos mantienen en un solo lugar los valores que usa el
     # archivado automático y permiten que Scenario registre sus cambios.
     def set_archive_age_hours(self, archive_age_hours):
@@ -92,7 +90,7 @@ class AVL:
                 return None
             
         self.root = self._insert(self.root, value) #This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
-        if self.stress is False:
+        if self.stress is True:
             self.balance()
 
     def _insert(self, node: Optional[Node], value) -> Node:
@@ -159,9 +157,9 @@ class AVL:
 
     def stress_mode(self, stress):
         self.stress = stress
-        if stress is False:
+
+        if stress is True:
             self.balance()
-        #If stress mode is on, nothing moves until they turn off stress mode
 
     def balance (self) -> None:
         self.root = self._balance(self.root) #I'm going to balance the tree starting from the root.
