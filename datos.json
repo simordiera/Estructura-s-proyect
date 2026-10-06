@@ -168,18 +168,6 @@
         "revisions": 2
     },
     {
-        "id": 1011,
-        "magnitude": 2.4,
-        "depth": 300.0,
-        "epicenter": [
-            100,
-            900
-        ],
-        "datetime": "2026-09-30T07:35:00",
-        "station": "STA011",
-        "revisions": 1
-    },
-    {
         "id": 1012,
         "magnitude": 4.6,
         "depth": 40.0,
@@ -538,5 +526,17 @@
         "datetime": "2026-10-01T11:50:00",
         "station": "STA035",
         "revisions": 4
+    },
+    {
+        "id": 1011,
+        "magnitude": 4.0,
+        "epicenter": [
+            32,
+            53
+        ],
+        "datetime": "2026-10-06T17:23:00",
+        "station": null,
+        "depth": 43.0,
+        "revisions": 1
     }
 ]
