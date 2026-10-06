@@ -30,7 +30,7 @@ class AVL:
 
     def _get_height(self, node: Optional[Node]) -> int: #We define a helper method that returns the height of a node.
         if node is None: #Is the node missing?
-            return 0  
+            return 0
         return node.height   #If the node exists, return its stored height.
 
     def _update_height(self, node: Node) -> None: #This method recalculates a node's height
@@ -89,9 +89,9 @@ class AVL:
                 self.same_archive(value, event)  #If the new event's ID is already in the historic list, we stop and do not insert it again.
                 return None
             
-        self.root = self._insert(self.root, value) #This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
+        self.root = self._insert(self.root, value)#This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
         if self.stress is True:
-            self.balance()
+            return Node
 
     def _insert(self, node: Optional[Node], value) -> Node:
 
@@ -156,14 +156,17 @@ class AVL:
         return node
 
     def stress_mode(self, stress):
-        self.stress = stress
-
-        if stress is True:
+        self.stress=stress
+        if stress is False:
             self.balance()
+        #If stress mode is on, nothing moves until they turn off stress mode
 
     def balance (self) -> None:
-        self.root = self._balance(self.root) #I'm going to balance the tree starting from the root.
-        #You pass the current root to _balance(). That function may return a different root after rotations. So you assign the result back 
+        print("BALANCE EJECUTADO. STRESS =", self.stress)
+        if self.stress:
+            return
+        self.root = self._balance(self.root)#I'm going to balance the tree starting from the root.
+        #You pass the current root to _balance(). That function may return a different root after rotations. So you assign the result back }
     
     def _balance(self, node: Optional[Node]) -> Optional[Node]:
 
@@ -331,7 +334,7 @@ class AVL:
             root.right = self._delete(root.right, successor, list_deleted, False)# Remove the successor from its original position. # False prevents the successor from being registered as a second deletion.
 
         self._update_height(root) # Update the height because the subtree structure has changed.
-        if self.stress_mode: # If stress mode is enabled, skip the rebalancing process.
+        if self.stress: # If stress mode is enabled, skip the rebalancing process.
             return root
 
         balance = self._balance_factor(root) # Calculate the balance factor after the deletion.

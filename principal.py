@@ -36,8 +36,7 @@ def cambiar_theme():
     st.session_state["modo_estres"] = st.session_state["stress_checkbox"]
     if "arbol" in st.session_state:
         st.session_state.arbol.stress_mode(
-            st.session_state["modo_estres"]
-        )
+            st.session_state["modo_estres"])
 if "stress_checkbox" not in st.session_state:
     st.session_state["stress_checkbox"] = st.session_state["modo_estres"]
 
@@ -66,7 +65,7 @@ if "arbol_bst" not in st.session_state:
 
 # CREAR Y RECONSTRUIR EL AVL
 if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or []) == 0:
-    st.session_state.arbol = AVL()
+    st.session_state.arbol = AVL( stress_mode=st.session_state["modo_estres"])
 
     for sismo in st.session_state.data:
         evento = Event(
@@ -79,11 +78,12 @@ if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or [
             sismo.get("revisions", 1)
         )
         st.session_state.arbol.insert(evento)
+    st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
 
 # RECUPERAR EL ARBOL
 arbol = st.session_state.arbol
 arbol_bst = st.session_state.arbol_bst
-
+arbol.stress_mode(st.session_state["modo_estres"])
 for id_eliminado in arbol.list_deleted:
     if arbol.research(id_eliminado) is not None:
         earthquake = arbol.research(id_eliminado)
@@ -143,7 +143,7 @@ if st.session_state.show_options:
                 st.session_state.data = data
                 guardar_json(st.session_state.data)
                 # RECONSTRUIR EL AVL
-                st.session_state.arbol = AVL()
+                st.session_state.arbol = AVL( stress_mode=st.session_state["modo_estres"])
 
                 for sismo in st.session_state.data:
                     evento = Event(
