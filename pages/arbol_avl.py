@@ -52,6 +52,27 @@ def node_label(node):
     )
 
 
+def node_tooltip(node):
+    event = node.value
+    priority, magnitude, identifier = event.get_code()
+    epicenter = event.get_epicenter()
+    return (
+        f"Identificador: SIS-{identifier:06d}\n"
+        f"Magnitud: {event.get_magnitude():.1f}\n"
+        f"Profundidad: {event.get_depth()}\n"
+        f"Epicentro: ({epicenter[0]}, {epicenter[1]})\n"
+        f"Fecha y hora: {event.get_datetime()}\n"
+        f"Estación: {event.get_station()}\n"
+        f"Zona: {event.get_zone()}\n"
+        f"Prioridad: {priority}\n"
+        f"Revisiones: {event.get_revisions()}\n"
+        f"Revisado: {'Sí' if event.get_review() else 'No'}\n"
+        f"Clave K: ({priority}, {magnitude:.1f}, {identifier})\n"
+        f"Altura: {calculated_height(node)}\n"
+        f"Factor de balance: {balance_factor(node)}"
+    ).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
 def dot_node_id(node):
     return f"node_{id(node)}"
 
@@ -61,7 +82,10 @@ def append_dot_edges(node, lines):
         return
 
     current_id = dot_node_id(node)
-    lines.append(f'    {current_id} [label="{node_label(node)}"];')
+    lines.append(
+        f'    {current_id} [label="{node_label(node)}", '
+        f'tooltip="{node_tooltip(node)}"];'
+    )
 
     for child, side in ((node.left, "I"), (node.right, "D")):
         if child is None:
@@ -246,19 +270,6 @@ with right_column:
 
 st.subheader("Detalle de nodos")
 st.dataframe(event_rows(tree), use_container_width=True, hide_index=True)
-st.caption("Cada botón elimina únicamente el nodo indicado del AVL activo.")
-for event in events:
-    node_columns = st.columns([5, 1])
-    with node_columns[0]:
-        st.write(f"SIS-{event.get_id():06d} | K={event.get_code()}")
-    with node_columns[1]:
-        if st.button("Eliminar", key=f"avl_delete_{event.get_id()}"):
-            operation = scenario.delete_event(event.get_id())
-            if operation is not None:
-                st.success(f"SIS-{event.get_id():06d} fue eliminado del AVL activo.")
-                st.rerun()
-            else:
-                st.error(f"No se pudo eliminar SIS-{event.get_id():06d}.")
 
 st.subheader("Histórico")
 historic_events = tree.list_historic
