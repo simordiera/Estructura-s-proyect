@@ -8,7 +8,7 @@ from scr.models.Scenario import Scenario
 
 
 st.set_page_config(
-    page_title="Cola de reportes",
+    page_title="Cola reportes",
     page_icon=":clipboard:",
     layout="wide",
 )

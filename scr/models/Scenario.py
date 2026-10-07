@@ -200,7 +200,7 @@ class Scenario:
 			copied_objects,
 		)
 		state["archive_age_hours"] = self.tree.archive_age_hours
-		state["stress_mode"] = self.tree.stress_mode
+		state["stress_mode"] = self.tree.stress
 		state["reports"] = self._copy_value(
 			self.report_queue.get_all(),
 			copied_objects,
@@ -261,8 +261,11 @@ class Scenario:
 			copied_objects,
 		)
 		self.tree.archive_age_hours = state["archive_age_hours"]
-		self.tree.stress_mode = state["stress_mode"]
-		self.stress_mode = state["stress_mode"]
+		stress_mode = state.get("stress_mode", self.tree.stress)
+		if not isinstance(stress_mode, bool):
+			stress_mode = self.tree.stress
+		self.tree.stress = stress_mode
+		self.stress_mode = stress_mode
 
 		self.report_queue = ReportQueue()
 		for report in state["reports"]:
@@ -420,7 +423,7 @@ class Scenario:
 			"archived_events",
 			len(events),
 		)
-		if not self.tree.stress_mode:
+		if not self.tree.stress:
 			self.tree.balance()
 		self.sync_comparison_tree()
 
@@ -434,6 +437,66 @@ class Scenario:
 			event.get_id()
 			for event in events
 		]
+		return operation
+
+	def _reactivate_archived_event(self, historic_event, active_event=None):
+		"""Move one archived event back into the active AVL and comparison BST."""
+		if historic_event not in self.tree.list_historic:
+			return None
+
+		event_id = historic_event.get_id()
+		event_to_insert = (
+			historic_event
+			if active_event is None
+			else active_event
+		)
+		if event_to_insert.get_id() != event_id:
+			return None
+		if self.tree.research(event_id) is not None:
+			return None
+		if (
+			event_id in self.tree.list_deleted
+			or event_id in self.tree.retired_ids
+		):
+			return None
+
+		historic_index = self.tree.list_historic.index(historic_event)
+		self.tree.list_historic.pop(historic_index)
+		self.tree.insert(event_to_insert)
+		if self.tree.research(event_id) is None:
+			self.tree.list_historic.insert(historic_index, historic_event)
+			return None
+
+		if event_id not in self._bst_insertion_order:
+			self._bst_insertion_order.append(event_id)
+		self.tree.metrics.increment("reactivated_events")
+		self.sync_comparison_tree()
+		return event_to_insert
+
+	def reactivate_event(self, event_id):
+		"""Reactivate one archived event as a single undoable scenario action."""
+		historic_event = next(
+			(
+				event
+				for event in self.tree.list_historic
+				if event.get_id() == event_id
+			),
+			None,
+		)
+		if historic_event is None:
+			return None
+
+		before = self.snapshot()
+		reactivated_event = self._reactivate_archived_event(historic_event)
+		if reactivated_event is None:
+			return None
+
+		operation = self._save_operation(
+			"reactivar_evento",
+			"Se reactivó un evento archivado.",
+			before,
+		)
+		operation.event_id = event_id
 		return operation
 
 	def add_report(self, report):
@@ -563,11 +626,20 @@ class Scenario:
 					"changed": False,
 				}
 
-			self.tree.list_historic.remove(historic_event)
-			self.tree.insert(report.to_event())
-			if event_id not in self._bst_insertion_order:
-				self._bst_insertion_order.append(event_id)
-			self.sync_comparison_tree()
+			reactivated_event = report.to_event()
+			reactivated_event.set_review(0)
+			if self._reactivate_archived_event(
+				historic_event,
+				reactivated_event,
+			) is None:
+				return {
+					"decision": "rechazado",
+					"message": (
+						f"No se pudo reactivar el evento archivado "
+						f"SIS-{event_id:06d}."
+					),
+					"changed": False,
+				}
 			return {
 				"decision": "reactivado",
 				"message": (
@@ -653,7 +725,9 @@ class Scenario:
 
 	def set_stress_mode(self, stress_mode):
 		before = self.snapshot()
-		self.tree.stress_mode = stress_mode
+		self.tree.stress = stress_mode
+		if not stress_mode:
+			self.tree.balance()
 		self.stress_mode = stress_mode
 		return self._save_operation(
 			"cambiar_modo",

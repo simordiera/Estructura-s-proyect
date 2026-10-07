@@ -136,7 +136,7 @@ class SubtreeArchiveManager:
         self.tree.list_historic.extend(events)
         self.tree.metrics.increment("mass_archives")
         self.tree.metrics.increment("archived_events", len(events))
-        if not self.tree.stress_mode:
+        if not self.tree.stress:
             self.tree.balance()
 
         operation = {

@@ -243,10 +243,10 @@ Las capturas de esta sección deben mostrar el código fuente en Visual Studio C
     `pages/arbol_bst.py`, líneas 189-224. Capturar el diagrama Graphviz, las métricas de eventos, altura, raíz y hojas, además de la información histórica y los recorridos. Esta parte permite explicar la comparación entre BST y AVL desde la interfaz.
 
 17. Formulario y validación de reportes:
-    `pages/reportsv.py`, líneas 124-253. Capturar el formulario de reporte, sus campos, la validación de rangos y fechas, la creación de `Report` y la llamada `scenario.add_report(report)`. El bloque demuestra cómo se prepara y se incorpora un reporte a la cola.
+    `pages/Cola_reportes.py`, líneas 124-253. Capturar el formulario de reporte, sus campos, la validación de rangos y fechas, la creación de `Report` y la llamada `scenario.add_report(report)`. El bloque demuestra cómo se prepara y se incorpora un reporte a la cola.
 
 18. Búsqueda y procesamiento de la cola FIFO:
-    `pages/reportsv.py`, líneas 255-388. Capturar la búsqueda por características, `queue.peek()`, el botón de procesamiento, `scenario.process_next_report()` y las tablas de reportes pendientes y procesados. Esta es la captura principal para explicar el funcionamiento de la cola y sus resultados.
+    `pages/Cola_reportes.py`, líneas 255-388. Capturar la búsqueda por características, `queue.peek()`, el botón de procesamiento, `scenario.process_next_report()` y las tablas de reportes pendientes y procesados. Esta es la captura principal para explicar el funcionamiento de la cola y sus resultados.
 
 9. Recomendaciones para las capturas
 

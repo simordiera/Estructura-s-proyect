@@ -1,38 +1,170 @@
 [
     {
-        "id": 101,
-        "magnitude": 4.7,
-        "depth": 30,
+        "id": 2001,
+        "magnitude": 3.2,
+        "depth": 45.0,
         "epicenter": [
-            300,
-            200
+            120,
+            80
         ],
-        "datetime": "2026-09-20 10:30:00",
-        "station": "Estacion_Manizales_Norte",
-        "revisions": 2
+        "datetime": "2026-09-20T10:15:00",
+        "station": "STA001",
+        "revisions": 1
     },
     {
-        "id": 102,
-        "magnitude": 5.6,
-        "depth": 20,
+        "id": 2002,
+        "magnitude": 5.1,
+        "depth": 25.0,
+        "epicenter": [
+            250,
+            120
+        ],
+        "datetime": "2026-09-21T14:30:00",
+        "station": "STA002",
+        "revisions": 3
+    },
+    {
+        "id": 2003,
+        "magnitude": 2.8,
+        "depth": 100.0,
         "epicenter": [
             700,
-            300
+            350
         ],
-        "datetime": "2026-09-21 14:20:00",
-        "station": "Estacion_Armenia_Centro",
+        "datetime": "2026-09-22T08:45:00",
+        "station": "STA003",
         "revisions": 2
     },
     {
-        "id": 103,
-        "magnitude": 6.8,
-        "depth": 8,
+        "id": 2004,
+        "magnitude": 6.2,
+        "depth": 80.0,
         "epicenter": [
-            500,
-            600
+            450,
+            450
         ],
-        "datetime": "2026-09-22 08:15:00",
-        "station": "Estacion_Pereira_Sur",
+        "datetime": "2026-09-23T19:20:00",
+        "station": "STA004",
+        "revisions": 5
+    },
+    {
+        "id": 2005,
+        "magnitude": 4.0,
+        "depth": 15.0,
+        "epicenter": [
+            850,
+            650
+        ],
+        "datetime": "2026-09-24T06:10:00",
+        "station": "STA005",
+        "revisions": 1
+    },
+    {
+        "id": 2006,
+        "magnitude": 3.5,
+        "depth": 50.0,
+        "epicenter": [
+            130,
+            90
+        ],
+        "datetime": "2026-09-20T10:15:00",
+        "station": "STA001",
+        "revisions": 2
+    },
+    {
+        "id": 2007,
+        "magnitude": 4.2,
+        "depth": 32.0,
+        "epicenter": [
+            140,
+            100
+        ],
+        "datetime": "2026-09-20T10:15:00",
+        "station": "STA009",
+        "revisions": 4
+    },
+    {
+        "id": 2008,
+        "magnitude": 4.7,
+        "depth": 20.0,
+        "epicenter": [
+            200,
+            200
+        ],
+        "datetime": "2026-09-25T11:40:00",
+        "station": "STA006",
+        "revisions": 1
+    },
+    {
+        "id": 2009,
+        "magnitude": 1.9,
+        "depth": 200.0,
+        "epicenter": [
+            600,
+            700
+        ],
+        "datetime": "2026-09-26T16:05:00",
+        "station": "STA007",
         "revisions": 3
+    },
+    {
+        "id": 2010,
+        "magnitude": 5.8,
+        "depth": 35.0,
+        "epicenter": [
+            50,
+            50
+        ],
+        "datetime": "2026-09-27T09:25:00",
+        "station": "STA008",
+        "revisions": 2
+    },
+    {
+        "id": 2011,
+        "magnitude": 3.7,
+        "depth": 60.0,
+        "epicenter": [
+            400,
+            800
+        ],
+        "datetime": "2026-09-28T13:50:00",
+        "station": "STA009",
+        "revisions": 6
+    },
+    {
+        "id": 2012,
+        "magnitude": 7.1,
+        "depth": 120.0,
+        "epicenter": [
+            900,
+            900
+        ],
+        "datetime": "2026-09-29T21:10:00",
+        "station": "STA010",
+        "revisions": 2
+    },
+    {
+        "id": 2013,
+        "magnitude": 6.5,
+        "depth": 75.0,
+        "epicenter": [
+            460,
+            460
+        ],
+        "datetime": "2026-09-23T19:20:00",
+        "station": "STA004",
+        "revisions": 5
+    },
+    {
+        "id": 2014,
+        "magnitude": 5.9,
+        "depth": 90.0,
+        "epicenter": [
+            470,
+            500
+        ],
+        "datetime": "2026-09-23T19:20:00",
+        "station": "STA011",
+        "revisions": 2
     }
 ]
