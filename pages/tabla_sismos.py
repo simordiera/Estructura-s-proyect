@@ -64,12 +64,12 @@ st.markdown(
     unsafe_allow_html=True
 ) #html
 st.title("tabla de los sismos creados", text_alignment="center")
+from scr.models.Archivo import cargar_json
 if "data" not in st.session_state:
-    st.session_state.data = []
-# Get the earthquake data stored in the session state.
+    st.session_state.data = cargar_json()
 datos = st.session_state.data
 # Convert the earthquake data into a Pandas DataFrame.
-df = pd.DataFrame(datos) 
+df = pd.DataFrame(datos)
 # Display the DataFrame in the Streamlit application.
 event = st.dataframe(
     df,

@@ -440,7 +440,6 @@ if st.session_state.get("show_delete", False):
             sismo for sismo in st.session_state.data
             if sismo["id"] != id #If the earthquake exists, delete it; otherwise, state that it does not exist.
     ]
-
             guardar_json(st.session_state.data)
             st.session_state.scenario.sync_comparison_tree()
             st.session_state.arbol_bst = st.session_state.scenario.bst
