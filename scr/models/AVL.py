@@ -17,9 +17,9 @@ class AVL:
             self.metrics = Metrics()
             self.simulation_clock = simulation_clock or datetime.now()
             self.archive_age_hours = archive_age_hours
-            self.stress_mode = stress_mode
-
-    # Keep automatic-archive settings in one place for Scenario.
+            self.stress = stress_mode
+    # Estos métodos mantienen en un solo lugar los valores que usa el
+    # archivado automático y permiten que Scenario registre sus cambios.
     def set_archive_age_hours(self, archive_age_hours):
         if archive_age_hours <= 0:
             raise ValueError("La antigüedad mínima debe ser positiva.")
@@ -30,7 +30,7 @@ class AVL:
 
     def _get_height(self, node: Optional[Node]) -> int: #We define a helper method that returns the height of a node.
         if node is None: #Is the node missing?
-            return 0  
+            return 0
         return node.height   #If the node exists, return its stored height.
 
     def _update_height(self, node: Node) -> None: #This method recalculates a node's height
@@ -89,8 +89,9 @@ class AVL:
                 self.same_archive(value, event)  #If the new event's ID is already in the historic list, we stop and do not insert it again.
                 return None
             
-        self.root = self._insert(self.root, value) #This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
-        self.stress_mode = False
+        self.root = self._insert(self.root, value)#This calls the recursive insertion method. The returned node is assigned to self.root because insertion or balancing can change the root.
+        if self.stress is True:
+            return Node
 
     def _insert(self, node: Optional[Node], value) -> Node:
 
@@ -122,57 +123,89 @@ class AVL:
                 elif value_key[2] > node_key[2]:
                     node.right = self._insert(node.right, value)
 
-            return node
-
         else:
             self.same_earthquake(value, node) #If the id is the same then it calls another function that checks the new earthquake with the one that’s already there and compares the information
+
+        self._update_height(node)
+
+        # If stress mode is active, do not balance
+        if self.stress is True:
+            return node
+
+        # Calculate the balance factor
+        balance = self._balance_factor(node)
+
+        # Left-Left
+        if balance > 1 and self._balance_factor(node.left) >= 0:
+            return self._rotate_right(node)
+
+        # Left-Right
+        if balance > 1 and self._balance_factor(node.left) < 0:
+            node.left = self._rotate_left(node.left)
+            return self._rotate_right(node)
+
+        # Right-Right
+        if balance < -1 and self._balance_factor(node.right) <= 0:
+            return self._rotate_left(node)
+
+        # Right-Left
+        if balance < -1 and self._balance_factor(node.right) > 0:
+            node.right = self._rotate_right(node.right)
+            return self._rotate_left(node)
 
         return node
 
     def stress_mode(self, stress):
-        if (stress is True):
-            return 
-        else: 
+        self.stress=stress
+        if stress is False:
             self.balance()
         #If stress mode is on, nothing moves until they turn off stress mode
 
     def balance (self) -> None:
-        self.root = self._balance(self.root) #I'm going to balance the tree starting from the root.
-        #You pass the current root to _balance(). That function may return a different root after rotations. So you assign the result back 
+        print("BALANCE EJECUTADO. STRESS =", self.stress)
+        if self.stress:
+            return
+        self.root = self._balance(self.root)#I'm going to balance the tree starting from the root.
+        #You pass the current root to _balance(). That function may return a different root after rotations. So you assign the result back }
     
-    def _balance(self, node: Optional[Node]) -> Node:
+    def _balance(self, node: Optional[Node]) -> Optional[Node]:
+
         if node is None:
             return None
-        #This checks whether the node doesn't exist. If the node is None, there is nothing to balance, so the function returns None.
 
-        node.left = self._balance(node.left) #recursively balance the left subtree and store the resulting root back into node.left.
-        node.right = self._balance(node.right) #It recursively balances the right subtree.
+        # Primero balanceamos los hijos
+        node.left = self._balance(node.left)
+        node.right = self._balance(node.right)
 
-        
-        self._update_height(node) #After balancing the children, you update the node's height because the subtree height may have changed.
-        balance = self._balance_factor(node) #Here you calculate the node's balance factor. (right subtree height - left subtree height). A balance factor of 0, 1, or -1 means the node is balanced. 
+        self._update_height(node)
 
-        if balance > 1: #The tree is too heavy on the left side.
+        balance = self._balance_factor(node)
 
-            #Now look at the left child. You want to know if the problem is: Left-Left or Left-Right
-            if self._balance_factor(node.left) >= 0: #left-left case. 
-                return self._rotate_right(node) #For a Left-Left imbalance, you perform a: right rotation
+        # LEFT
+        if balance > 1:
 
-            else: #left-right case.
-                node.left = self._rotate_left(node.left) #For a Left-Right case, you first perform a left rotation on the left child. Then you perform a right rotation on the original node.
+            if self._balance_factor(node.left) >= 0:
+                node = self._rotate_right(node)
 
-                return self._rotate_right(node)
+            else:
+                node.left = self._rotate_left(node.left)
+                node = self._rotate_right(node)
 
-        if balance < -1: #Now the tree is too heavy on the right side.
+        # RIGHT
+        elif balance < -1:
 
-            if self._balance_factor(node.right) <= 0: #Right-Right case
-                return self._rotate_left(node)
-            else: #Right-Left case
-                node.right = self._rotate_right(
-                    node.right
-                )
+            if self._balance_factor(node.right) <= 0:
+                node = self._rotate_left(node)
 
-                return self._rotate_left(node)
+            else:
+                node.right = self._rotate_right(node.right)
+                node = self._rotate_left(node)
+
+        # Después de la rotación, los hijos pueden haber cambiado
+        node.left = self._balance(node.left)
+        node.right = self._balance(node.right)
+
+        self._update_height(node)
 
         return node
 
@@ -301,7 +334,7 @@ class AVL:
             root.right = self._delete(root.right, successor, list_deleted, False)# Remove the successor from its original position. # False prevents the successor from being registered as a second deletion.
 
         self._update_height(root) # Update the height because the subtree structure has changed.
-        if self.stress_mode: # If stress mode is enabled, skip the rebalancing process.
+        if self.stress: # If stress mode is enabled, skip the rebalancing process.
             return root
 
         balance = self._balance_factor(root) # Calculate the balance factor after the deletion.
