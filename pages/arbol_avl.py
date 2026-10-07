@@ -293,7 +293,8 @@ def create_scenario():
             tuple(sismo["epicenter"]),
             sismo["datetime"],
             sismo["station"],
-            sismo.get("revisions", 1)
+            sismo.get("revisions", 1),
+            review=sismo.get("review")
         )
 
         # Add the event to the scenario
@@ -350,7 +351,8 @@ if "arbol" not in st.session_state:
             tuple(sismo["epicenter"]),
             sismo["datetime"],
             sismo["station"],
-            sismo.get("revisions", 1)
+            sismo.get("revisions", 1),
+            review=sismo.get("review")
         )
 
         # Add the event to the Scenario

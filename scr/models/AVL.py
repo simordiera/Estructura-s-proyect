@@ -495,40 +495,80 @@ class AVL:
             return None
         return self._data_correction(earthquake, new_info)
     
-    def _data_correction (self, earthquake, new_info):
-        event = earthquake.value
-        old_key = event.get_code()
+    def _data_correction(self, earthquake, new_info):
+        """Validate a correction before changing the active AVL event."""
+        if not isinstance(new_info, dict) or not new_info:
+            return None
 
-        if "magnitud" in new_info: # Update the magnitude and recalculate the earthquake priority.
-            event.set_magnitude(new_info["magnitud"])
-            event.set_priority()
+        aliases = {
+            "magnitude": "magnitude",
+            "magnitud": "magnitude",
+            "depth": "depth",
+            "profundidad": "depth",
+            "epicenter": "epicenter",
+            "epicentro": "epicenter",
+            "datetime": "datetime",
+            "fecha y hora": "datetime",
+            "station": "station",
+            "estacion": "station",
+        }
+        updates = {}
+        for name, value in new_info.items():
+            field = aliases.get(name)
+            if field is None or field in updates:
+                return None
+            updates[field] = value
 
-        elif "profundidad" in new_info:
-            event.set_depth(new_info["profundidad"])
-            event.set_priority()
+        old_event = earthquake.value
+        old_key = old_event.get_code()
+        updated_event = deepcopy(old_event)
 
-        elif "epicentro" in new_info: # Update the epicenter, recalculate the zone, and update the priority.
-            event.set_epicenter(new_info["epicentro"][0], new_info["epicentro"][1])
-            event.set_zone()
-            event.set_priority()
+        try:
+            for field, value in updates.items():
+                if field == "magnitude":
+                    if not updated_event.set_magnitude(value):
+                        return None
+                elif field == "depth":
+                    if not updated_event.set_depth(value):
+                        return None
+                elif field == "epicenter":
+                    if not isinstance(value, (tuple, list)) or len(value) != 2:
+                        return None
+                    if not updated_event.set_epicenter(value[0], value[1]):
+                        return None
+                elif field == "datetime":
+                    if isinstance(value, datetime):
+                        value = value.isoformat()
+                    if not isinstance(value, str) or not updated_event.set_datetime(value):
+                        return None
+                elif field == "station":
+                    if not isinstance(value, str) or not value.strip():
+                        return None
+                    updated_event.set_station(value.strip())
+        except (TypeError, ValueError, OverflowError):
+            return None
 
-        elif "fecha y hora" in new_info: # Update the date and time of the earthquake.
-            event.set_datetime(new_info["fecha y hora"])
+        updated_event.set_zone()
+        updated_event.set_priority()
+        updated_event.set_revisions((old_event.get_revisions() or 0) + 1)
+        updated_event.set_review(0)
+        new_key = updated_event.get_code()
 
-        elif "estacion" in new_info: # Update the station information.
-            event.set_stations(new_info["estacion"])
+        if old_key == new_key:
+            # Even when the AVL key is unchanged, a correction is a new
+            # revision and must return the event to the pending state.
+            earthquake.value = updated_event
+            return "Datos corregidos. El sismo conserva su posición en el AVL."
 
-        new_key=event.get_code()
-
-        if (old_key == new_key): #Changing the data didn't change the key that determines the earthquake's position.
-            return "Datos corregidos. El sismo esta en el mismo lugar."
-        else:
-            event.set_review(0)  # Mark the corrected earthquake as not reviewed.
-            self.delete(event.get_id()) # Remove the earthquake from its old position in the AVL tree.
-            if self.list_deleted: # Remove earthquake the list_deleted because it will be inserted again.
-                self.list_deleted.pop(-1)
-            self.insert(event) # Reinsert the corrected earthquake so it can be placed according to its new key. 
-            return("datos corregidos. se reubico el sismo")
+        # Delete with the old key before inserting the corrected event.
+        self.root = self._delete(
+            self.root,
+            earthquake,
+            self.list_deleted,
+            register_deleted=False,
+        )
+        self.root = self._insert(self.root, updated_event)
+        return "Datos corregidos. El sismo fue reubicado en el AVL."
 
 
 

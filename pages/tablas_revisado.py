@@ -1,5 +1,56 @@
 import streamlit as st
 import pandas as pd
+from scr.models.Archivo import cargar_json
+from scr.models.AVL import AVL
+from scr.models.Event import Event
+from scr.models.Scenario import Scenario
+
+
+def get_active_tree():
+    """Return the session AVL, rebuilding it from persisted events if needed."""
+    tree = st.session_state.get("arbol")
+    scenario = st.session_state.get("scenario")
+    scenario_tree = getattr(scenario, "tree", None)
+
+    if scenario_tree is not None and (
+        tree is None or (tree.root is None and scenario_tree.root is not None)
+    ):
+        tree = scenario_tree
+
+    if tree is None or tree.root is None:
+        data = st.session_state.get("data")
+        if data is None:
+            data = cargar_json()
+        st.session_state.data = data
+
+        tree = AVL()
+        for record in data:
+            event = Event(
+                record["id"],
+                record["magnitude"],
+                record["depth"],
+                tuple(record["epicenter"]),
+                record["datetime"],
+                record["station"],
+                record.get("revisions", 1),
+                review=record.get("review"),
+            )
+            existing = tree.research(event.get_id())
+            if existing is None:
+                tree.insert(event)
+            else:
+                tree.same_earthquake(event, existing)
+
+    if scenario is None:
+        scenario = Scenario()
+    scenario.attach_trees(tree, st.session_state.get("arbol_bst"))
+    st.session_state.arbol = tree
+    st.session_state.scenario = scenario
+    st.session_state.arbol_bst = scenario.bst
+    return tree
+
+
+arbol = get_active_tree()
 
 #page color
 color_fondo = "#6e9693"
@@ -69,8 +120,8 @@ sismos_no_revisados = []
 sismos_revisados = []
 
 # Check if the AVL tree contains any nodes.
-if st.session_state.arbol.root is not None:
-    eventos = st.session_state.arbol.in_order()
+if arbol.root is not None:
+    eventos = arbol.in_order()
     for evento in eventos:
         # Check if the earthquake has not been reviewed.
         if evento.get_review() == 0:
@@ -81,7 +132,8 @@ if st.session_state.arbol.root is not None:
                 "depth": evento.get_depth(),
                 "Fecha": evento.get_datetime().date(),
                 "Hora": evento.get_datetime().time(),
-                "Estación": evento.get_station()
+                "Estación": evento.get_station(),
+                "Revisiones": evento.get_revisions()
             })
 
         else:

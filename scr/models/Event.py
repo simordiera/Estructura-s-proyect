@@ -1,7 +1,7 @@
 from datetime import datetime
 class Event:
 
-    def __init__(self, id , magnitude, depth, epicenter, datetime, station, revisions=None):
+    def __init__(self, id , magnitude, depth, epicenter, datetime, station, revisions=None, review=None):
         # Validate event data and derive its zone, priority, and state.
         self.set_id(id)
         self.set_magnitude(magnitude)
@@ -20,7 +20,10 @@ class Event:
             self.set_revisions(1)
         else:
             self.set_revisions(revisions)
-        self.set_review(1 if self.get_revisions() > 0 else 0)
+        default_review = 1 if self.get_revisions() > 0 else 0
+        if review not in (0, 1):
+            review = default_review
+        self.set_review(review)
 
     def set_review(self, review):
         self.review = review

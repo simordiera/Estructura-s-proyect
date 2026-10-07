@@ -9,7 +9,8 @@
         ],
         "datetime": "2026-10-01 10:00:00",
         "station": "EST-001",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     },
     {
         "id": 101,
@@ -21,19 +22,21 @@
         ],
         "datetime": "2026-10-01 12:00:00",
         "station": "EST-002",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     },
     {
         "id": 102,
-        "magnitude": 5.0,
+        "magnitude": 8.0,
         "depth": 30,
         "epicenter": [
             515,
             520
         ],
-        "datetime": "2026-10-02 08:00:00",
+        "datetime": "2026-10-02T08:00:00",
         "station": "EST-003",
-        "revisions": 10
+        "revisions": 12,
+        "review": 1
     },
     {
         "id": 103,
@@ -45,11 +48,12 @@
         ],
         "datetime": "2026-10-02 09:30:00",
         "station": "EST-004",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     },
     {
         "id": 104,
-        "magnitude": 5.5,
+        "magnitude": 8.0,
         "depth": 15,
         "epicenter": [
             700,
@@ -57,7 +61,8 @@
         ],
         "datetime": "2026-10-03 10:00:00",
         "station": "EST-005",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     },
     {
         "id": 200,
@@ -69,7 +74,8 @@
         ],
         "datetime": "2026-10-04 14:00:00",
         "station": "EST-006",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     },
     {
         "id": 201,
@@ -81,7 +87,8 @@
         ],
         "datetime": "2026-10-04 16:00:00",
         "station": "EST-007",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     },
     {
         "id": 202,
@@ -93,7 +100,8 @@
         ],
         "datetime": "2026-10-05 08:00:00",
         "station": "EST-008",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     },
     {
         "id": 203,
@@ -105,7 +113,8 @@
         ],
         "datetime": "2026-10-05 12:00:00",
         "station": "EST-009",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     },
     {
         "id": 300,
@@ -117,6 +126,7 @@
         ],
         "datetime": "2026-10-06 09:00:00",
         "station": "EST-010",
-        "revisions": 10
+        "revisions": 10,
+        "review": 1
     }
 ]

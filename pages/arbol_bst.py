@@ -182,6 +182,8 @@ else:
             tuple(sismo["epicenter"]),
             f'{sismo["datetime"]}',
             sismo["station"],
+            sismo.get("revisions", 1),
+            review=sismo.get("review")
         )
         tree.insert(evento)
     st.session_state.arbol_bst = tree
