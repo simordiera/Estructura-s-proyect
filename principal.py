@@ -11,7 +11,69 @@ from scr.models.Scenario import Scenario
 from datetime import datetime, timedelta
 import inspect
 # Main Streamlit page.
+def reconstruir_data_y_arbol(data):
 
+    nuevo_arbol = AVL()
+    datos_limpios = []
+
+    for sismo in data:
+
+        evento = Event(
+            sismo["id"],
+            sismo["magnitude"],
+            sismo["depth"],
+            tuple(sismo["epicenter"]),
+            f'{sismo["datetime"]}',
+            sismo["station"],
+            sismo.get("revisions", 1)
+        )
+
+        existing_node = nuevo_arbol.research(
+            evento.get_id()
+        )
+
+        # El sismo no existe todavía
+        if existing_node is None:
+
+            nuevo_arbol.insert(evento)
+            datos_limpios.append(sismo.copy())
+
+        # El sismo ya existe
+        else:
+
+            resultado = nuevo_arbol.same_earthquake(
+                evento,
+                existing_node
+            )
+
+            if resultado:
+
+                evento_actual = nuevo_arbol.research(
+                    evento.get_id()
+                ).value
+
+                # Buscar el ÚNICO registro que ya guardamos
+                for registro in datos_limpios:
+
+                    if registro["id"] == evento.get_id():
+
+                        registro["magnitude"] = evento_actual.get_magnitude()
+                        registro["depth"] = evento_actual.get_depth()
+                        registro["epicenter"] = list(
+                            evento_actual.get_epicenter()
+                        )
+                        registro["datetime"] = str(
+                            evento_actual.get_datetime()
+                        )
+                        registro["station"] = evento_actual.get_station()
+                        registro["revisions"] = evento_actual.get_revisions()
+
+                        break
+
+            # Si same_earthquake devuelve False,
+            # NO agregamos el duplicado a datos_limpios.
+
+    return datos_limpios, nuevo_arbol
 # Configure the page layout.
 st.set_page_config(
     page_title="SismoLab", #Page name
@@ -61,28 +123,21 @@ def reconstruir_bst(data):
 
     return nuevo_bst
 # Load data from JSON.
+# Load data from JSON.
+
 if "data" not in st.session_state:
-        st.session_state.data = cargar_json()
-
-if "arbol_bst" not in st.session_state:
-    st.session_state.arbol_bst = reconstruir_bst(st.session_state.data) 
-
+    st.session_state.data = cargar_json()
 # Create or rebuild the AVL.
-if "arbol" not in st.session_state or len(st.session_state.arbol.in_order() or []) == 0:
-    st.session_state.arbol = AVL()
-
-    for sismo in st.session_state.data:
-        evento = Event(
-            sismo["id"],
-            sismo["magnitude"],
-            sismo["depth"],
-            tuple(sismo["epicenter"]),
-            f'{sismo["datetime"]}',
-            sismo["station"],
-            sismo.get("revisions", 1)
-        )
-        st.session_state.arbol.insert(evento)
-    st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
+if "arbol" not in st.session_state:
+    st.session_state.data, st.session_state.arbol = reconstruir_data_y_arbol(
+        st.session_state.data
+    )
+    guardar_json(st.session_state.data)
+# Create the BST using the cleaned data.
+if "arbol_bst" not in st.session_state:
+    st.session_state.arbol_bst = reconstruir_bst(
+        st.session_state.data
+    )
 
 # Restore the active tree state.
 arbol = st.session_state.arbol
@@ -148,32 +203,13 @@ if st.session_state.show_options:
 
             if uploaded_file is not None:
                 data = json.load(uploaded_file)
-                st.session_state.data = data
+                st.session_state.data, st.session_state.arbol = reconstruir_data_y_arbol(data)
                 guardar_json(st.session_state.data)
-                # REBUILD AVL
-                st.session_state.arbol = AVL()
-
-                for sismo in st.session_state.data:
-                    evento = Event(
-                    sismo["id"],
-                    sismo["magnitude"],
-                    sismo["depth"],
-                    tuple(sismo["epicenter"]),
-                    f'{sismo["datetime"]}',
-                    sismo["station"],
-                    sismo.get("revisions", 1)
-                )
-
-                    st.session_state.arbol.insert(evento)
                 st.session_state.arbol_bst = reconstruir_bst(st.session_state.data)
-                arbol=st.session_state.arbol
-                st.session_state.scenario.attach_trees(
-                    st.session_state.arbol,
-                    st.session_state.arbol_bst,
-                )
+                arbol = st.session_state.arbol
+                st.session_state.scenario.attach_trees(st.session_state.arbol,st.session_state.arbol_bst,)
                 st.success("Archivo cargado correctamente :)")
-                st.session_state.show_upload=False
-                # Keep these controls open until the rerun completes.
+                st.session_state.show_upload = False
                 st.rerun()
 
     # Open the manual-entry form.
