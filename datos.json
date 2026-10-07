@@ -1,7 +1,80 @@
 [
     {
-        "id": 1,
-        "magnitude": -2.0,
+        "id": 2002,
+        "magnitude": 5.1,
+        "depth": 25.0,
+        "epicenter": [
+            250,
+            120
+        ],
+        "datetime": "2026-09-21T14:30:00",
+        "station": "STA002",
+        "revisions": 3
+    },
+    {
+        "id": 2003,
+        "magnitude": 2.8,
+        "depth": 100.0,
+        "epicenter": [
+            700,
+            350
+        ],
+        "datetime": "2026-09-22T08:45:00",
+        "station": "STA003",
+        "revisions": 2
+    },
+    {
+        "id": 2004,
+        "magnitude": 6.2,
+        "depth": 80.0,
+        "epicenter": [
+            450,
+            450
+        ],
+        "datetime": "2026-09-23T19:20:00",
+        "station": "STA004",
+        "revisions": 5
+    },
+    {
+        "id": 2005,
+        "magnitude": 4.0,
+        "depth": 15.0,
+        "epicenter": [
+            850,
+            650
+        ],
+        "datetime": "2026-09-24T06:10:00",
+        "station": "STA005",
+        "revisions": 1
+    },
+    {
+        "id": 2006,
+        "magnitude": 3.5,
+        "depth": 50.0,
+        "epicenter": [
+            130,
+            90
+        ],
+        "datetime": "2026-09-20T10:15:00",
+        "station": "STA001",
+        "revisions": 2
+    },
+    {
+        "id": 2007,
+        "magnitude": 4.2,
+        "depth": 32.0,
+        "epicenter": [
+            140,
+            100
+        ],
+        "datetime": "2026-09-20T10:15:00",
+        "station": "STA009",
+        "revisions": 4
+    },
+    {
+        "id": 2008,
+        "magnitude": 4.7,
+        "depth": 20.0,
         "epicenter": [
             0,
             0
